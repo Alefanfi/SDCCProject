@@ -1,12 +1,17 @@
+import json
+import sys
+import threading
+import time
+import requests
 from flask import Flask, request
 from flask_restful import Api
 
 
-# db_connect = create_engine('sqlite:///chinook.db')
 app = Flask(__name__)
 api = Api(app)
 
-sensors = [0, 0, 0, 0, 0, 0]
+local = dict()  # Dizionario con i sensori locali
+other = dict()  # Dizionario dei sensori afferenti ad altri nodi fog
 
 
 @app.route('/', methods=["GET"])
@@ -16,7 +21,10 @@ def usage():
 
 @app.route('/all', methods=["GET"])
 def get_all():
-    return {'sensors': sensors}
+    total = other.copy()
+    total.update(local)
+
+    return {'sensors': total}
 
 
 @app.route('/update', methods=["POST"])
@@ -26,9 +34,10 @@ def update():
         sensor_num = request.form['num']
         sensor_val = request.form['val']
 
-        sensors[int(sensor_num)] = int(sensor_val)
-
-        print(sensor_num)
+        if sensor_num not in local:
+            local[sensor_num] = sensor_val
+        else:
+            local.update({sensor_num: sensor_val})
 
         return {'DONE': "OK"}
 
@@ -37,5 +46,49 @@ def update():
         return {'Exception': e.args}
 
 
+@app.route('/merge', methods=["POST"])
+def merge():
+    try:
+
+        sens = json.loads(request.data)
+
+        for key, value in sens.items():
+            if key not in other:
+                other[key] = value
+            else:
+                other.update({key: value})
+
+        return {'DONE': "OK"}
+
+    except Exception as e:
+
+        app.logger.error(e.args)
+
+        return {'Exception': e.args}
+
+
+def sending_thread():
+    while True:
+        time.sleep(5)
+
+        print(local, file=sys.stderr)
+        print(other, file=sys.stderr)
+
+        data = json.dumps(local)
+
+        r = requests.post("http://" + "fog0" + ":" + str(8080) + "/merge",
+                          data=data)
+        print(r, file=sys.stderr)
+        r = requests.post("http://" + "fog1" + ":" + str(8080) + "/merge",
+                          data=data)
+        print(r, file=sys.stderr)
+        r = requests.post("http://" + "fog2" + ":" + str(8080) + "/merge",
+                          data=data)
+        print(r, file=sys.stderr)
+
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port='8080')
+
+    t = threading.Thread(target=sending_thread)
+    t.start()
+    app.run(host='0.0.0.0', debug=True, port='8080')

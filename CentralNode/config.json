@@ -1,0 +1,6 @@
+{
+  "aws_key_id": "add aws_key_id",
+  "aws_secret_key": "add aws_secret_key",
+  "bucket_name": "add bucket_name",
+  "folder_name": "cluster"
+}
