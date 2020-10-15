@@ -1,47 +1,39 @@
-"""import socket
-import sys"""
-import time
-
+import sys
 import requests
 
 
-def create_client(server_ip, port):
+def sensor_info(server_ip, server_port):
 
-    while True:
-        url = "http://" + server_ip + ":" + str(port) + "/all"
-        r = requests.get(url)
-        print(r.text)
+    url = "http://" + server_ip + ":" + str(server_port) + "/all"
+    r = requests.get(url)
+    print(r.text)
 
-        time.sleep(10)
 
-"""
-    # Create a TCP/IP socket
-    sock = socket.create_connection(('54.159.110.76', 10000))
+def stats_info(server_ip, server_port):
 
-    # Connect the socket to the port where the server is listening
-    server_address = ('localhost', 10000)
-    print('connecting to' + str(server_address), sys.stderr)
+    url = "http://" + server_ip + ":" + str(server_port) + "/stats"
+    r = requests.get(url)
+    print(r.text)
 
-    try:
-
-        # Send data
-        message = 'This is the message.  It will be repeated.'
-        print('sending: ' + message, sys.stderr)
-        sock.sendall(message.encode())
-
-        # Look for the response
-        amount_received = 0
-        amount_expected = len(message)
-
-        while amount_received < amount_expected:
-            data = sock.recv(16).decode()
-            amount_received += len(data)
-            print('received: ' + str(data), sys.stderr)
-
-    finally:
-        print('closing socket', sys.stderr)
-        sock.close()
-"""
 
 if __name__ == "__main__":
-    create_client("localhost", 8080)
+
+    host = "localhost"
+    port = 8080
+
+    print("---- WELCOME ----\n\n"
+          "park - Shows in the parking lot which places are taken\n"
+          "stats - Shows the statistics on the last week\n"
+          "quit - Quit")
+
+    while True:
+        text = input("--> ")
+
+        if text == "park":
+            sensor_info(host, port)
+
+        elif text == "stats":
+            stats_info(host, port)
+
+        elif text == "quit":
+            sys.exit()

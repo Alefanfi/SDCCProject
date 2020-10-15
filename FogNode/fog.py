@@ -3,15 +3,18 @@ import sys
 import threading
 import time
 import requests
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask_restful import Api
-
 
 app = Flask(__name__)
 api = Api(app)
 
 local = dict()  # Dizionario con i sensori locali
 other = dict()  # Dizionario dei sensori afferenti ad altri nodi fog
+stats = dict()  # Dizionario con le statistiche dell'ultima settimana
+
+server_ip = "localhost"
+server_port = 5000
 
 
 @app.route('/', methods=["GET"])
@@ -24,7 +27,17 @@ def get_all():
     total = other.copy()
     total.update(local)
 
-    return {'sensors': total}
+    return jsonify(total)
+
+
+@app.route('/stats', methods=["GET"])
+def get_stats():
+    r = requests.get("http://" + server_ip + ":" + str(server_port) + "/get_stat")
+    print(r, file=sys.stderr)
+
+    data = json.loads(r.text)
+
+    return jsonify(data)
 
 
 @app.route('/update', methods=["POST"])
@@ -71,8 +84,13 @@ def sending_thread():
     while True:
         time.sleep(5)
 
+        """
+        Decommentare se si vogliono vedere i valori dei duei dict mantenuti dal nodo fog
+
         print(local, file=sys.stderr)
         print(other, file=sys.stderr)
+
+        """
 
         data = json.dumps(local)
 
@@ -87,8 +105,20 @@ def sending_thread():
         print(r, file=sys.stderr)
 
 
-if __name__ == '__main__':
+def stats_thread():
+    while True:
 
+        time.sleep(60 * 60)  # Aggiornamento ogni ora
+
+        r = requests.post("http://" + server_ip + ":" + str(server_port) + "/fog_info", data="da definire")
+        print(r, file=sys.stderr)
+
+
+if __name__ == '__main__':
+    st = threading.Thread(target=stats_thread)
     t = threading.Thread(target=sending_thread)
+
+    st.start()
     t.start()
+
     app.run(host='0.0.0.0', debug=True, port='8080')

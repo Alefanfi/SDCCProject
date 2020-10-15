@@ -1,63 +1,72 @@
+import json
 import logging
 import boto3
 from botocore.exceptions import ClientError
 
 logger = logging.getLogger(__name__)
 
-s3_resource = boto3.resource('s3')
+AWS_KEY_ID = ""
+AWS_SECRET_KEY = ""
+BUCKET_NAME = ""
+FOLDER_NAME = ""
+AWS_SESSION_TOKEN = ""
+
+
+# Read the .json file to get the config.
+def readJson():
+    global AWS_KEY_ID, AWS_SECRET_KEY, BUCKET_NAME, FOLDER_NAME, AWS_SESSION_TOKEN
+    with open('config.json') as config_file:
+        data = json.load(config_file)
+        AWS_KEY_ID = data['aws_key_id']
+        AWS_SECRET_KEY = data['aws_secret_key']
+        AWS_SESSION_TOKEN = data['aws_session_token']
+        BUCKET_NAME = data['bucket_name']
+        FOLDER_NAME = data['folder_name']
+        config_file.close()
 
 
 def get_s3(region=None):
     """Get a Boto 3 S3 resource with a specific Region or with your default Region."""
-    global s3_resource
+    s3_resource = boto3.resource(
+        's3',
+        aws_access_key_id=AWS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_KEY,
+        aws_session_token=AWS_SESSION_TOKEN)
+
     if not region or s3_resource.meta.client.meta.region_name == region:
         return s3_resource
     else:
         return boto3.resource('s3', region_name=region)
 
 
-def create_bucket(name, region=None):
+def create_bucket(bucket_name, region=None):
+    """Create an S3 bucket in a specified region
+
+    If a region is not specified, the bucket is created in the S3 default
+    region (us-east-1).
+
+    :param bucket_name: Bucket to create
+    :param region: String region to create bucket in, e.g., 'us-west-2'
+    :return: True if bucket created, else False
     """
-    Create an Amazon S3 bucket with the specified name and in the specified Region.
 
-    Usage is shown in usage_demo at the end of this module.
-
-    :param name: The name of the bucket to create. This name must be globally unique
-                 and must adhere to bucket naming requirements.
-    :param region: The Region in which to create the bucket. If this is not specified,
-                   the Region configured in your shared credentials is used. If no
-                   Region is configured, 'us-east-1' is used.
-    :return: The newly created bucket.
-    """
-    s3 = get_s3(region)
-
+    # Create bucket
     try:
-        if region:
-            bucket = s3.create_bucket(
-                Bucket=name,
-                CreateBucketConfiguration={
-                    'LocationConstraint': region
-                }
-            )
+        if region is None:
+            s3_client = boto3.client('s3', aws_access_key_id=AWS_KEY_ID,
+                                     aws_secret_access_key=AWS_SECRET_KEY, aws_session_token=AWS_SESSION_TOKEN)
+            s3_client.create_bucket(Bucket=bucket_name)
         else:
-            bucket = s3.create_bucket(Bucket=name)
-
-        bucket.wait_until_exists()
-
-        logger.info("Created bucket '%s' in region=%s", bucket.name,
-                    s3.meta.client.meta.region_name)
-    except ClientError as error:
-        logger.exception("Couldn't create bucket named '%s' in region=%s.",
-                         name, region)
-        if error.response['Error']['Code'] == 'IllegalLocationConstraintException':
-            logger.error("When the session Region is anything other than us-east-1, "
-                         "you must specify a LocationConstraint that matches the "
-                         "session Region. The current session Region is %s and the "
-                         "LocationConstraint Region is %s.",
-                         s3.meta.client.meta.region_name, region)
-        raise error
-    else:
-        return bucket
+            s3_client = boto3.client('s3', aws_access_key_id=AWS_KEY_ID,
+                                     aws_secret_access_key=AWS_SECRET_KEY, aws_session_token=AWS_SESSION_TOKEN,
+                                     region_name=region)
+            location = {'LocationConstraint': region}
+            s3_client.create_bucket(Bucket=bucket_name,
+                                    CreateBucketConfiguration=location)
+    except ClientError as e:
+        logging.error(e)
+        return False
+    return True
 
 
 def bucket_exists(bucket_name):
@@ -69,7 +78,8 @@ def bucket_exists(bucket_name):
     :param bucket_name: The name of the bucket to check.
     :return: True when the bucket exists; otherwise, False.
     """
-    s3 = get_s3()
+    s3 = boto3.resource('s3', aws_access_key_id=AWS_KEY_ID,
+                        aws_secret_access_key=AWS_SECRET_KEY, aws_session_token=AWS_SESSION_TOKEN)
     try:
         s3.meta.client.head_bucket(Bucket=bucket_name)
         logger.info("Bucket %s exists.", bucket_name)
@@ -89,10 +99,12 @@ def get_buckets():
 
     :return: The list of buckets.
     """
-    s3 = get_s3()
+    s3 = boto3.resource('s3', aws_access_key_id=AWS_KEY_ID,
+                        aws_secret_access_key=AWS_SECRET_KEY, aws_session_token=AWS_SESSION_TOKEN)
     try:
         buckets = list(s3.buckets.all())
-        logger.info("Got buckets: %s.", buckets)
+        for k in buckets:
+            print("Got buckets:", k)
     except ClientError:
         logger.exception("Couldn't get buckets.")
         raise
@@ -100,14 +112,20 @@ def get_buckets():
         return buckets
 
 
-def delete_bucket(bucket):
+def delete_bucket(bucket_name):
     """
     Delete a bucket. The bucket must be empty or an error is raised.
 
     Usage is shown in usage_demo at the end of this module.
 
-    :param bucket: The bucket to delete.
+    :param bucket_name: The bucket's name that you want to delete
     """
+
+    s3 = boto3.resource('s3', aws_access_key_id=AWS_KEY_ID,
+                        aws_secret_access_key=AWS_SECRET_KEY, aws_session_token=AWS_SESSION_TOKEN)
+
+    bucket = s3.Bucket(bucket_name)
+
     try:
         bucket.delete()
         bucket.wait_until_not_exists()
@@ -116,21 +134,26 @@ def delete_bucket(bucket):
         logger.exception("Couldn't delete bucket %s.", bucket.name)
         raise
 
+
 # -----------------------------------------------------------------------------------------------------------------------
 
 
-def put_object(bucket, object_key, data):
+def put_object(bucket_name, object_key, data):
     """
     Upload data to a bucket and identify it with the specified object key.
 
     Usage is shown in usage_demo at the end of this module.
 
-    :param bucket: The bucket to receive the data.
+    :param bucket_name: The bucket's name that receive the data.
     :param object_key: The key of the object in the bucket.
     :param data: The data to upload. This can either be bytes or a string. When this
                  argument is a string, it is interpreted as a file name, which is
                  opened in read bytes mode.
     """
+    s3 = boto3.resource('s3', aws_access_key_id=AWS_KEY_ID,
+                        aws_secret_access_key=AWS_SECRET_KEY, aws_session_token=AWS_SESSION_TOKEN)
+    bucket = s3.Bucket(bucket_name)
+
     put_data = data
     if isinstance(data, str):
         try:
@@ -153,19 +176,24 @@ def put_object(bucket, object_key, data):
             put_data.close()
 
 
-def get_object(bucket, object_key):
+def get_object(bucket_name, object_key):
     """
     Gets an object from a bucket.
 
     Usage is shown in usage_demo at the end of this module.
 
-    :param bucket: The bucket that contains the object.
+    :param bucket_name: The bucket that contains the object.
     :param object_key: The key of the object to retrieve.
     :return: The object data in bytes.
     """
+
+    s3 = boto3.resource('s3', aws_access_key_id=AWS_KEY_ID,
+                        aws_secret_access_key=AWS_SECRET_KEY, aws_session_token=AWS_SESSION_TOKEN)
+    bucket = s3.Bucket(bucket_name)
+
     try:
         body = bucket.Object(object_key).get()['Body'].read()
-        logger.info("Got object '%s' from bucket '%s'.", object_key, bucket.name)
+        print("Got object", object_key, "from bucket", bucket.name)
     except ClientError:
         logger.exception(("Couldn't get object '%s' from bucket '%s'.",
                           object_key, bucket.name))
@@ -174,23 +202,27 @@ def get_object(bucket, object_key):
         return body
 
 
-def list_objects(bucket, prefix=None):
+def list_objects(bucket_name, prefix=None):
     """
     Lists the objects in a bucket, optionally filtered by a prefix.
 
     Usage is shown in usage_demo at the end of this module.
 
-    :param bucket: The bucket to query.
+    :param bucket_name: The bucket to query.
     :param prefix: When specified, only objects that start with this prefix are listed.
     :return: The list of objects.
     """
+    s3 = boto3.resource('s3', aws_access_key_id=AWS_KEY_ID,
+                        aws_secret_access_key=AWS_SECRET_KEY, aws_session_token=AWS_SESSION_TOKEN)
+    bucket = s3.Bucket(bucket_name)
+
     try:
         if not prefix:
             objects = list(bucket.objects.all())
         else:
             objects = list(bucket.objects.filter(Prefix=prefix))
-        logger.info("Got objects %s from bucket '%s'",
-                    [o.key for o in objects], bucket.name)
+        for k in objects:
+            print("Got object", k.key, "from bucket", bucket_name)
     except ClientError:
         logger.exception("Couldn't get objects for bucket '%s'.", bucket.name)
         raise
@@ -229,21 +261,30 @@ def copy_object(source_bucket, source_object_key, dest_bucket, dest_object_key):
         return obj
 
 
-def delete_object(bucket, object_key):
+def delete_object(bucket_name, object_key):
     """
     Removes an object from a bucket.
 
     Usage is shown in usage_demo at the end of this module.
 
-    :param bucket: The bucket that contains the object.
+    :param bucket_name: The bucket that contains the object.
     :param object_key: The key of the object to delete.
     """
+    s3 = boto3.resource('s3', aws_access_key_id=AWS_KEY_ID,
+                        aws_secret_access_key=AWS_SECRET_KEY, aws_session_token=AWS_SESSION_TOKEN)
+    bucket = s3.Bucket(bucket_name)
+
     try:
         obj = bucket.Object(object_key)
         obj.delete()
         obj.wait_until_not_exists()
-        logger.info("Deleted object '%s' from bucket '%s'.", object_key, bucket.name)
+        print("Deleted object", object_key, "from bucket", bucket.name)
     except ClientError:
         logger.exception("Couldn't delete object '%s' from bucket '%s'.",
                          object_key, bucket.name)
         raise
+
+
+if __name__ == '__main__':
+    readJson()
+    get_buckets()
