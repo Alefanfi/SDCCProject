@@ -1,7 +1,7 @@
 {
-  "aws_key_id":"ASIA4FJNBICS6NDUAD5M",
-  "aws_secret_key":"irOMSxNWJnBuWJmFszbFH4PQxorAI9GaS/MCiQZP",
-  "aws_session_token":"FwoGZXIvYXdzELL//////////wEaDDW1baSVWTVUV0JaYSLBAVQZRcOKfqoOtQKD5LmzzLnVQTbab+IxsxoLL/CepuSg5CjpYdKqKNJqTAKa8+O8VYTdkB399YcGPu2G/WTN3Rf/00h0SAZZwDxV/BVlSY6Wh5YTwYZzVckxjJk2xZ7b+3QBjBQmniK0iw5Hiqr1+tNjW361c/VZeygdDC+8B/MGb8Xt/dcRCVE/OIOKCeGyYNHv0eUCBeej19bgGUUxo1kb4Z39Y4Ox7Om6fxlKWK3GrcZKdWL/7vc1Ztb3v8fIPxMos/qh/AUyLTQKbenKa1c3ZS70f0vLOmCs9DlDQNLYXcvXNB0lBxOe5RfhmmGROUpVC1etLA==",
+  "aws_key_id":"Add aws_access_key_id",
+  "aws_secret_key":"Add aws_secret_key",
+  "aws_session_token":"Add aws_session_token",
   "bucket_name":"s3bucketparkingnow",
   "folder_name":"cluster"
 }
