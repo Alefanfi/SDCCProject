@@ -1,6 +1,9 @@
 import json
 import logging
+import shutil
+
 import boto3
+import botocore
 from botocore.exceptions import ClientError
 
 logger = logging.getLogger(__name__)
@@ -27,6 +30,7 @@ def readJson():
 
 def get_s3(region=None):
     """Get a Boto 3 S3 resource with a specific Region or with your default Region."""
+    readJson()
     s3_resource = boto3.resource(
         's3',
         aws_access_key_id=AWS_KEY_ID,
@@ -49,6 +53,7 @@ def create_bucket(bucket_name, region=None):
     :param region: String region to create bucket in, e.g., 'us-west-2'
     :return: True if bucket created, else False
     """
+    readJson()
 
     # Create bucket
     try:
@@ -78,6 +83,8 @@ def bucket_exists(bucket_name):
     :param bucket_name: The name of the bucket to check.
     :return: True when the bucket exists; otherwise, False.
     """
+    readJson()
+
     s3 = boto3.resource('s3', aws_access_key_id=AWS_KEY_ID,
                         aws_secret_access_key=AWS_SECRET_KEY, aws_session_token=AWS_SESSION_TOKEN)
     try:
@@ -99,6 +106,8 @@ def get_buckets():
 
     :return: The list of buckets.
     """
+    readJson()
+
     s3 = boto3.resource('s3', aws_access_key_id=AWS_KEY_ID,
                         aws_secret_access_key=AWS_SECRET_KEY, aws_session_token=AWS_SESSION_TOKEN)
     try:
@@ -120,6 +129,8 @@ def delete_bucket(bucket_name):
 
     :param bucket_name: The bucket's name that you want to delete
     """
+
+    readJson()
 
     s3 = boto3.resource('s3', aws_access_key_id=AWS_KEY_ID,
                         aws_secret_access_key=AWS_SECRET_KEY, aws_session_token=AWS_SESSION_TOKEN)
@@ -150,6 +161,8 @@ def put_object(bucket_name, object_key, data):
                  argument is a string, it is interpreted as a file name, which is
                  opened in read bytes mode.
     """
+    readJson()
+
     s3 = boto3.resource('s3', aws_access_key_id=AWS_KEY_ID,
                         aws_secret_access_key=AWS_SECRET_KEY, aws_session_token=AWS_SESSION_TOKEN)
     bucket = s3.Bucket(bucket_name)
@@ -187,6 +200,8 @@ def get_object(bucket_name, object_key):
     :return: The object data in bytes.
     """
 
+    readJson()
+
     s3 = boto3.resource('s3', aws_access_key_id=AWS_KEY_ID,
                         aws_secret_access_key=AWS_SECRET_KEY, aws_session_token=AWS_SESSION_TOKEN)
     bucket = s3.Bucket(bucket_name)
@@ -212,6 +227,7 @@ def list_objects(bucket_name, prefix=None):
     :param prefix: When specified, only objects that start with this prefix are listed.
     :return: The list of objects.
     """
+    readJson()
     s3 = boto3.resource('s3', aws_access_key_id=AWS_KEY_ID,
                         aws_secret_access_key=AWS_SECRET_KEY, aws_session_token=AWS_SESSION_TOKEN)
     bucket = s3.Bucket(bucket_name)
@@ -223,6 +239,7 @@ def list_objects(bucket_name, prefix=None):
             objects = list(bucket.objects.filter(Prefix=prefix))
         for k in objects:
             print("Got object", k.key, "from bucket", bucket_name)
+
     except ClientError:
         logger.exception("Couldn't get objects for bucket '%s'.", bucket.name)
         raise
@@ -242,6 +259,7 @@ def copy_object(source_bucket, source_object_key, dest_bucket, dest_object_key):
     :param dest_object_key: The key of the copied object.
     :return: The new copy of the object.
     """
+
     try:
         obj = dest_bucket.Object(dest_object_key)
         obj.copy_from(CopySource={
@@ -270,6 +288,8 @@ def delete_object(bucket_name, object_key):
     :param bucket_name: The bucket that contains the object.
     :param object_key: The key of the object to delete.
     """
+    readJson()
+
     s3 = boto3.resource('s3', aws_access_key_id=AWS_KEY_ID,
                         aws_secret_access_key=AWS_SECRET_KEY, aws_session_token=AWS_SESSION_TOKEN)
     bucket = s3.Bucket(bucket_name)
@@ -285,6 +305,50 @@ def delete_object(bucket_name, object_key):
         raise
 
 
-if __name__ == '__main__':
+def download_file(bucket_name, file_key, file_name):
+
     readJson()
-    get_buckets()
+
+    s3 = boto3.resource('s3', aws_access_key_id=AWS_KEY_ID,
+                        aws_secret_access_key=AWS_SECRET_KEY, aws_session_token=AWS_SESSION_TOKEN)
+    bucket = s3.Bucket(bucket_name)
+
+    try:
+        bucket.download_file(file_key, file_name)
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Code'] == "404":
+            print("The object does not exist.")
+        else:
+            raise
+    else:
+        shutil.move(file_name, FOLDER_NAME)
+        return
+
+
+def upload_file(file_name, bucket_name, object_name=None):
+    """Upload a file to an S3 bucket
+        :param file_name: File to upload
+        :param bucket_name: Bucket to upload to
+        :param object_name: S3 object name. If not specified then file_name is used
+        :return: True if file was uploaded, else False
+    """
+
+    readJson()
+
+    # If S3 object_name was not specified, use file_name
+    if object_name is None:
+        object_name = file_name
+
+    # Upload the file
+    s3_client = boto3.client('s3', aws_access_key_id=AWS_KEY_ID,
+                             aws_secret_access_key=AWS_SECRET_KEY, aws_session_token=AWS_SESSION_TOKEN)
+
+    try:
+
+        s3_client.upload_file(file_name, bucket_name, object_name)
+
+    except ClientError as e:
+        logging.error(e)
+        return False
+    print('Done')
+    return True

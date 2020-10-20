@@ -42,14 +42,18 @@ class Sensor(Thread):
 if __name__ == "__main__":
 
     # creaiamo un insieme di sensori che inviino i dati ai diversi nodi fog
-    for i in range(6):
+    for i in range(1, 9):
         s = Sensor(i, "localhost", 8080)
         s.start()
 
-    for i in range(6, 11):
+    for i in range(9, 17):
         s = Sensor(i, "localhost", 8081)
         s.start()
 
-    for i in range(11, 16):
-        s = Sensor(i, "localhost", 8081)
+    for i in range(17, 25):
+        s = Sensor(i, "localhost", 8082)
+        s.start()
+
+    for i in range(25, 33):
+        s = Sensor(i, "localhost", 8083)
         s.start()
