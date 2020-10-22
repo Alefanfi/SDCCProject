@@ -3,14 +3,14 @@ services:
   container0:
     container_name: fog0
     build:
-      context: ./service1
+      context: ./FogNode
       dockerfile: Dockerfile
       #args:
        # buildno: 1
     image: alefanfi/ubuntu20.04:latest
     #command: python fog.py
     volumes:
-      - ./service1:/fog
+      - ./FogNode:/fog
     ports:
       - "8080:8080"
     expose:
@@ -19,14 +19,14 @@ services:
   container1:
     container_name: fog1
     build:
-      context: ./service1
+      context: ./FogNode
       dockerfile: Dockerfile
       #args:
       # buildno: 1
     image: alefanfi/ubuntu20.04:latest
     #command: python fog.py
     volumes:
-      - ./service1:/fog
+      - ./FogNode:/fog
     ports:
       - "8081:8080"
     expose:
@@ -36,14 +36,14 @@ services:
   container2:
     container_name: fog2
     build:
-      context: ./service1
+      context: ./FogNode
       dockerfile: Dockerfile
       #args:
       # buildno: 1
     image: alefanfi/ubuntu20.04:latest
     #command: python fog.py
     volumes:
-      - ./service1:/fog
+      - ./FogNode:/fog
     ports:
       - "8082:8080"
     expose:
@@ -53,14 +53,14 @@ services:
   container3:
     container_name: fog3
     build:
-      context: ./service1
+      context: ./FogNode
       dockerfile: Dockerfile
       #args:
       # buildno: 1
     image: alefanfi/ubuntu20.04:latest
     #command: python fog.py
     volumes:
-      - ./service1:/fog
+      - ./FogNode:/fog
     ports:
       - "8083:8080"
     expose:

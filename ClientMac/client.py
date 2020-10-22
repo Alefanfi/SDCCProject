@@ -9,11 +9,10 @@ import requests
 from PyQt5 import QtGui, QtWidgets, uic  # , QtSql
 from PyQt5.QtCore import Qt
 
-
 server_ip = "localhost"
 server_port = 8080
 
-qtCreatorFile = "parcheggio_gui.ui"  # Enter file
+qtCreatorFile = "gui/parcheggio_gui.ui"  # Enter file
 Ui_MainWindow, QtBaseClass = uic.loadUiType(qtCreatorFile)
 
 parcheggio_vuoto = ("QLineEdit {\n"
@@ -30,12 +29,14 @@ parcheggio_occupato = ("QLineEdit {\n"
                        "    background: #cf4245;\n"
                        "}")
 
+"""
 parcheggio_prenotato = ("QLineEdit {\n"
                         "    border: 2px solid gray;\n"
                         "    border-radius: 10px;\n"
                         "    padding: 0 8px;\n"
                         "    background: #ffcd12;\n"
                         "}")
+"""
 
 
 class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -203,7 +204,6 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
 
 
 def show_parking(window):
-
     while True:
         url = "http://" + server_ip + ":" + str(server_port) + "/all"
         r = requests.get(url)
@@ -227,7 +227,8 @@ if __name__ == "__main__":
         application = QtWidgets.QApplication(sys.argv)
         win = MyApp()
 
-        t = threading.Thread(target=show_parking, args=(win, ))
+        t = threading.Thread(target=show_parking, args=(win,))
+        t.daemon = True
         t.start()
 
         try:
@@ -236,3 +237,71 @@ if __name__ == "__main__":
 
         except Exception as eccezione:
             pass
+
+"""
+def sensor_info(server_ip, server_port):
+
+    url = "http://" + server_ip + ":" + str(server_port) + "/all"
+    r = requests.get(url)
+    print(r.text)
+
+    data = json.loads(r.text)
+
+    show_parking(data)
+
+
+def stats_info(server_ip, server_port):
+    url = "http://" + server_ip + ":" + str(server_port) + "/stats"
+    r = requests.get(url)
+    print(r.text)
+
+
+if __name__ == "__main__":
+
+    host = "localhost"
+    port = 8080
+
+    print("---- WELCOME ----\n\n"
+          "park - Shows in the parking lot which places are taken\n"
+          "stats - Shows the statistics on the last week\n"
+          "quit - Quit")
+
+    while True:
+        text = input("--> ")
+
+        if text == "park":
+            sensor_info(host, port)
+
+        elif text == "stats":
+            stats_info(host, port)
+
+        elif text == "quit":
+            sys.exit()
+
+    # Create a TCP/IP socket
+    sock = socket.create_connection(('54.159.110.76', 10000))
+
+    # Connect the socket to the port where the server is listening
+    server_address = ('localhost', 10000)
+    print('connecting to' + str(server_address), sys.stderr)
+
+    try:
+
+        # Send data
+        message = 'This is the message.  It will be repeated.'
+        print('sending: ' + message, sys.stderr)
+        sock.sendall(message.encode())
+
+        # Look for the response
+        amount_received = 0
+        amount_expected = len(message)
+
+        while amount_received < amount_expected:
+            data = sock.recv(16).decode()
+            amount_received += len(data)
+            print('received: ' + str(data), sys.stderr)
+
+    finally:
+        print('closing socket', sys.stderr)
+        sock.close()
+"""

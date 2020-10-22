@@ -4,7 +4,7 @@ import ctypes
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtCore import Qt
 
-qtCreatorFile = "parcheggio_gui.ui"  # Enter file
+qtCreatorFile = "gui/parcheggio_gui.ui"  # Enter file
 Ui_MainWindow, QtBaseClass = uic.loadUiType(qtCreatorFile)
 
 parcheggio_vuoto = ("QLineEdit {\n"
@@ -31,7 +31,7 @@ parcheggio_prenotato = ("QLineEdit {\n"
 
 def show_parking(sensors):
     """ctypes.windll.shcore.SetProcessDpiAwareness()
-    appoo = QtGui.QApplication.instance()"""
+        appoo = QtGui.QApplication.instance()"""
     ctypes.CDLL("libc.{}".format("so.6" if platform.uname()[0] != "Darwin" else "dylib"))
 
     appoo = QtWidgets.QApplication.instance()

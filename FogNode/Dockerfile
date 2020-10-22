@@ -14,8 +14,6 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-EXPOSE 8080, 8081, 8082
-
 ENTRYPOINT [ "python3" ]
 
 CMD [ "fog.py" ]
