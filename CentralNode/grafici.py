@@ -51,7 +51,7 @@ def create_plot_24h(times, ay):
     plt.ylabel('Num posti occupati')"""
 
 
-def write_pdf():
+def write_pdf(ax, ay):
 
     filename = 'statistiche.pdf'
 
@@ -59,7 +59,12 @@ def write_pdf():
     pdf.add_page()
     pdf.set_xy(0, 0)
     pdf.set_font('arial', 'B', 13.0)
-    pdf.cell(ln=0, h=5.0, align='L', w=0, txt="Hello", border=0)
+
+    pdf.cell(ln=0, h=5.0, align='L', w=0, txt='', border=0)
+
+    for k in range(0, len(ax), 1):
+        pdf.cell(ln=k, h=5.0, align='L', w=0, txt='alle '+str(ax[k])+' il numero di posti occupati è '+str(ay[k]), border=0)
+
     pdf.output(filename, 'F')
     shutil.move(filename, FOLDER_NAME)
 

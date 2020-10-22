@@ -71,7 +71,7 @@ def create_stats():
             ax.append(x)
             ay.append((stats[x]))
         grafici.create_plot_24h(ax, ay)
-        grafici.write_pdf()
+        grafici.create_plot_24h(ax, ay)
         grafici.merge_pdfs()
 
 
