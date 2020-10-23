@@ -4,7 +4,6 @@ import shutil
 from datetime import datetime
 
 import matplotlib.pyplot as plt
-import pandas as pd
 import matplotlib.dates as mdates
 from fpdf import FPDF
 import PyPDF2
@@ -29,14 +28,10 @@ def readJSON():
 
 def create_plot_24h(times, ay):
 
-    # prendere i valori dal dizionario
-    # times = pd.date_range(start='2015-10-06', periods=24, freq='1H')
-    # y = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 34, 60, 65, 70, 756, 80, 85, 90, 95, 100, 105, 1670, 115]
-
     fig, ax = plt.subplots(1, figsize=(11.69, 8.27))
     fig.autofmt_xdate()
-    # plt.scatter(times, ay)
-    plt.plot(times, ay)
+    plt.scatter(times, ay)
+    # plt.plot(times, ay)
     plt.xticks(times)
 
     xfmt = mdates.DateFormatter('%H:%M')
@@ -44,8 +39,6 @@ def create_plot_24h(times, ay):
 
     plt.savefig('grafico.pdf')
     shutil.move('grafico.pdf', FOLDER_NAME)
-    # plt.show()
-
     """plt.title('Posti occupati nelle ultime 24 ore')
     plt.xlabel('Orario')
     plt.ylabel('Num posti occupati')"""
