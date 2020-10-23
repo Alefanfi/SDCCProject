@@ -34,13 +34,12 @@ class Dao:
     def insert_value(self, values):
         mycursor = self.db.cursor()
 
-        sql = "INSERT INTO sensors (sensor, num, date) VALUES (%s, %s, %s)"
+        sql = "INSERT INTO sensors (sensor, num, date) VALUES (%s, %s, NOW())"
         for k in values:
-            now = datetime.now()
-            str_date = now.strftime("%Y-%m-%d %H:0:0")
-            val = (k, values[k], str_date)
+            val = (k, values[k])
+
             mycursor.execute(sql, val)
-            print(mycursor.rowcount, "record inserted.")
+            # print(mycursor.rowcount, "record inserted.")
 
         self.db.commit()
 
