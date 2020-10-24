@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>870</width>
-    <height>718</height>
+    <width>760</width>
+    <height>800</height>
    </rect>
   </property>
   <property name="font">
@@ -173,17 +173,17 @@
    <widget class="QLabel" name="label_7">
     <property name="geometry">
      <rect>
-      <x>750</x>
-      <y>320</y>
-      <width>111</width>
-      <height>71</height>
+      <x>285</x>
+      <y>710</y>
+      <width>200</width>
+      <height>70</height>
      </rect>
     </property>
     <property name="text">
      <string/>
     </property>
     <property name="pixmap">
-     <pixmap>depositphotos_73409341-stock-photo-parking-area-on-the-road.jpg</pixmap>
+     <pixmap>button.png</pixmap>
     </property>
     <property name="scaledContents">
      <bool>true</bool>

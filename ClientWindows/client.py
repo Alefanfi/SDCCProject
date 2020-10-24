@@ -1,14 +1,16 @@
 import json
 import threading
 import time
-
+import random
 import requests
 import sys, pyqtgraph, ctypes
 from PyQt5 import QtGui, QtCore, QtWidgets, uic, QtSerialPort  # , QtSql
 from PyQt5.QtCore import Qt, QTimer, QCoreApplication, QIODevice, QStringListModel, QSize, QPoint
+from flask import request
+import matplotlib.pyplot as plt
 
-server_ip = "localhost"
-server_port = 8080
+proxy_ip = "findfognode"
+proxy_port = 5000
 
 qtCreatorFile = "gui/parcheggio_gui.ui"  # Enter file
 Ui_MainWindow, QtBaseClass = uic.loadUiType(qtCreatorFile)
@@ -40,10 +42,12 @@ parcheggio_prenotato = ("QLineEdit {\n"
 class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
     '''GUI principale'''
 
-    def __init__(self):
+    def __init__(self, rnum):
 
         QtWidgets.QMainWindow.__init__(self)
         Ui_MainWindow.__init__(self)
+
+        self.rnum = rnum
         self.setupUi(self)
 
         self.setWindowModality(Qt.NonModal)
@@ -57,12 +61,6 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.setFixedSize(self.width(), self.height())
 
         self.label_7.mouseDoubleClickEvent = self.getStats
-
-    def getStats(self, e):
-
-        url = "http://" + server_ip + ":" + str(server_port) + "/stats"
-        r = requests.get(url)
-        print(r.text)
 
     def setOccupied(self, sensors):
 
@@ -195,10 +193,47 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
         else:
             self.p32.setStyleSheet(parcheggio_vuoto)
 
+    def getStats(self, e):
+
+        url = "http://" + proxy_ip + ":" + str(proxy_port) + "/stats?hash=" + str(self.rnum)
+        r = requests.get(url)
+        testoAnalisi = r.text
+
+        appo = testoAnalisi.replace("}", "")
+        appo = appo.replace('"', "")
+        appo = appo.replace("'", "")
+        appo = appo.replace(",", "")
+        appo = appo.replace(" ", "")
+        appo_split_n = appo.split("\\n")
+        orario = []
+        numeroPosti = []
+        new_numeroPosti = []
+        for i in range(len(appo_split_n)):
+            appo_split_analisi = appo_split_n[i].split(":")
+            if len(appo_split_analisi) > 1:
+                orario.append(int(appo_split_analisi[0]))
+                numeroPosti.append(appo_split_analisi[1])
+        orario_sorted = sorted(orario)
+        new_orario = []
+        for k in range(len(orario_sorted)):
+            indice_cercare = orario_sorted[k]
+            indice = orario.index(indice_cercare)
+            new_numeroPosti.append(numeroPosti[indice])
+            if len(str(indice_cercare)) == 1:
+                ora = "{0}{1}:00".format("0", str(indice_cercare))
+            else:
+                ora = "{0}:00".format(str(indice_cercare))
+            new_orario.append(ora)
+        plt.figure(figsize=(15, 8))
+        plt.plot(orario, numeroPosti)
+        plt.xticks(orario)
+
+        plt.show()
+
 
 def show_parking(window):
     while True:
-        url = "http://" + server_ip + ":" + str(server_port) + "/all"
+        url = "http://" + proxy_ip + ":" + str(proxy_port) + "/all?hash="+str(window.rnum)
         r = requests.get(url)
         print(r.text)
 
@@ -210,12 +245,16 @@ def show_parking(window):
 
 if __name__ == "__main__":
 
+    seedValue = random.randrange(sys.maxsize)
+    random.seed(seedValue)
+    num = random.randint(2000, 3000)
+
     ctypes.windll.shcore.SetProcessDpiAwareness()
     appo = QtGui.QApplication.instance()
 
     if appo is None:
         application = QtWidgets.QApplication(sys.argv)
-        win = MyApp()
+        win = MyApp(num)
 
         t = threading.Thread(target=show_parking, args=(win,))
         t.daemon = True
