@@ -5,14 +5,18 @@ from threading import Thread
 
 import requests
 
+proxy_ip = "findfognode"
+proxy_port = 5000
+
 
 class Sensor(Thread):
-    def __init__(self, num, server_ip, port):
+    def __init__(self, num, server_ip, port, hashnum):
         Thread.__init__(self)
         self.server_ip = server_ip  # ip del server
         self.port = port            # porta a cui collegarsi
         self.num = num              # numero del sensore
         self.vacant = 0             # posto auto inizialmente considerato libero
+        self.hashnum = hashnum
 
     def run(self):
 
@@ -27,9 +31,9 @@ class Sensor(Thread):
                 self.vacant = 0
 
             # Decommentare se si vuole vedere cosa fa il sensore
-            # print("Sensor" + str(self.num) + " - " + str(self.vacant))
+            print("Sensor" + str(self.num) + " - " + str(self.vacant))
 
-            r = requests.post("http://" + self.server_ip + ":" + str(self.port) + "/update",
+            r = requests.post("http://" + self.server_ip + ":" + str(self.port) + "/update?hash="+str(self.hashnum),
                               data={'num': self.num, 'val': self.vacant})
 
             if r.status_code != 200:
@@ -43,17 +47,17 @@ if __name__ == "__main__":
 
     # creaiamo un insieme di sensori che inviino i dati ai diversi nodi fog
     for i in range(1, 9):
-        s = Sensor(i, "localhost", 8080)
+        s = Sensor(i, proxy_ip, proxy_port, 1)
         s.start()
 
     for i in range(9, 17):
-        s = Sensor(i, "localhost", 8081)
+        s = Sensor(i, proxy_ip, proxy_port, 2)
         s.start()
 
     for i in range(17, 25):
-        s = Sensor(i, "localhost", 8082)
+        s = Sensor(i, proxy_ip, proxy_port, 3)
         s.start()
 
     for i in range(25, 33):
-        s = Sensor(i, "localhost", 8083)
+        s = Sensor(i, proxy_ip, proxy_port, 4)
         s.start()
