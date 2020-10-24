@@ -1,67 +1,35 @@
-version: "3.3"
+version: '3.3'
+
 services:
-  container0:
-    container_name: fog0
-    build:
-      context: ./FogNode
-      dockerfile: Dockerfile
-      #args:
-       # buildno: 1
-    image: alefanfi/ubuntu20.04:latest
-    #command: python fog.py
-    volumes:
-      - ./FogNode:/fog
-    ports:
-      - "8080:8080"
-    expose:
-      - "5000"
+    reverseproxy:
+        build:
+            context: ./ReverseProxy
+            dockerfile: Dockerfile
+        image: nginx:alpine
+        ports:
+            - "5000:5000"
+        restart: always
+        depends_on:
+            -   fognode
+        networks:
+            - proxynet
 
-  container1:
-    container_name: fog1
-    build:
-      context: ./FogNode
-      dockerfile: Dockerfile
-      #args:
-      # buildno: 1
-    image: alefanfi/ubuntu20.04:latest
-    #command: python fog.py
-    volumes:
-      - ./FogNode:/fog
-    ports:
-      - "8081:8080"
-    expose:
-      - "5001"
+    fognode:
+        build:
+            context: ./FogNode
+            dockerfile: Dockerfile
+            #args:
+             # buildno: 1
+        image: alefanfi/ubuntu20.04:latest
+        #command: python fog.py
+        volumes:
+            - ./ReverseProxy:/fog
+        expose:
+            - "8080"
+            - "8081"
+        networks:
+            - proxynet
 
-
-  container2:
-    container_name: fog2
-    build:
-      context: ./FogNode
-      dockerfile: Dockerfile
-      #args:
-      # buildno: 1
-    image: alefanfi/ubuntu20.04:latest
-    #command: python fog.py
-    volumes:
-      - ./FogNode:/fog
-    ports:
-      - "8082:8080"
-    expose:
-      - "5002"
-
-
-  container3:
-    container_name: fog3
-    build:
-      context: ./FogNode
-      dockerfile: Dockerfile
-      #args:
-      # buildno: 1
-    image: alefanfi/ubuntu20.04:latest
-    #command: python fog.py
-    volumes:
-      - ./FogNode:/fog
-    ports:
-      - "8083:8080"
-    expose:
-      - "5003"
+networks:
+    proxynet:
+        name: custom_network

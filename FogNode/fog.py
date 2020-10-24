@@ -1,8 +1,10 @@
 import json
+import socket
 import sys
 import threading
 import time
 import requests
+
 from flask import Flask, request, jsonify
 from flask_restful import Api
 
@@ -10,25 +12,24 @@ app = Flask(__name__)
 api = Api(app)
 
 local = dict()  # Dizionario con i sensori locali
-other = dict()  # Dizionario dei sensori afferenti ad altri nodi fog
+total = dict()  # Dizionario dei sensori afferenti ad altri nodi fog
 
-auto = dict()   # Numero di volte in cui quel parcheggio è stato preso nell'ultima ora
+auto = dict()  # Numero di volte in cui quel parcheggio è stato preso nell'ultima ora
 stats = dict()  # Dizionario con le statistiche dell'ultima settimana
 
 server_ip = "3.232.43.204"
 server_port = 5000
 
+my_ip = socket.gethostbyname(socket.gethostname())
+
 
 @app.route('/', methods=["GET"])
-def usage():
-    return {'Welcome to the progetto ammazzata!': 'bah'}
+def use_me():
+    return jsonify({'name': my_ip})
 
 
 @app.route('/all', methods=["GET"])
 def get_all():
-    total = other.copy()
-    total.update(local)
-
     return jsonify(total)
 
 
@@ -44,7 +45,6 @@ def get_stats():
 
 @app.route('/update', methods=["POST"])
 def update():
-
     try:
 
         sensor_num = request.form['num']
@@ -59,6 +59,8 @@ def update():
 
             local.update({sensor_num: sensor_val})
 
+        total.update(local)
+
         return {'DONE': "OK"}
 
     except Exception as e:
@@ -66,17 +68,17 @@ def update():
         return {'Exception': e.args}
 
 
+"""
 @app.route('/merge', methods=["POST"])
 def merge():
-
     try:
         sens = json.loads(request.data)
 
         for key, value in sens.items():
-            if key not in other:
-                other[key] = value
+            if key not in total:
+                total[key] = value
             else:
-                other.update({key: value})
+                total.update({key: value})
 
         return {'DONE': "OK"}
 
@@ -85,11 +87,24 @@ def merge():
         app.logger.error(e.args)
 
         return {'Exception': e.args}
+"""
 
 
 def sending_thread():
+
+    fog_server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+    fog_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+    # Enable broadcasting mode
+    fog_server.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    fog_server.settimeout(0.2)
+
     while True:
-        time.sleep(30)
+        time.sleep(10)
+
+        message = json.dumps(local).encode('utf-8')
+        fog_server.sendto(message, ('<broadcast>', 8081))
+
+        local.clear()
 
         """
         Decommentare se si vogliono vedere i valori dei duei dict mantenuti dal nodo fog
@@ -97,7 +112,6 @@ def sending_thread():
         print(local, file=sys.stderr)
         print(other, file=sys.stderr)
 
-        """
 
         data = json.dumps(local)
 
@@ -113,11 +127,33 @@ def sending_thread():
         r = requests.post("http://" + "fog3" + ":" + str(8080) + "/merge",
                           data=data)
         print(r, file=sys.stderr)
+        """
+
+
+def listen_for_updates():
+
+    fog_client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+    fog_client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+    # Enable broadcasting mode
+    fog_client.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+
+    fog_client.bind(("", 8081))
+    while True:
+        # Thanks @seym45 for a fix
+        data, addr = fog_client.recvfrom(2000)
+        print("received message: %s" % data, file=sys.stderr)
+
+        sens = json.loads(data.decode('utf-8'))
+
+        for key, value in sens.items():
+            if key not in total:
+                total[key] = value
+            else:
+                total.update({key: value})
 
 
 def stats_thread():
     while True:
-
         time.sleep(60)  # Aggiornamento ogni ora
 
         r = requests.post("http://" + server_ip + ":" + str(server_port) + "/fog_info", data=json.dumps(auto))
@@ -127,10 +163,16 @@ def stats_thread():
 
 
 if __name__ == '__main__':
+
     st = threading.Thread(target=stats_thread)
+    st.daemon = True
     t = threading.Thread(target=sending_thread)
+    t.daemon = True
+    t1 = threading.Thread(target=listen_for_updates)
+    t1.daemon = True
 
     st.start()
     t.start()
+    t1.start()
 
     app.run(host='0.0.0.0', debug=True, port='8080')
