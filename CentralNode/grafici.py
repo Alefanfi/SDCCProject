@@ -36,6 +36,9 @@ def create_plot_24h(times, ay):
         new_times.append(str(indice_cercare))
 
     plt.figure(figsize=(11.69, 8.27))
+    plt.title('Posti occupati nelle ultime 24 ore')
+    plt.xlabel('Ora')
+    plt.ylabel('Numero posti occupati')
 
     plt.plot(new_times, new_ay)
     plt.xticks(new_times)
@@ -43,24 +46,34 @@ def create_plot_24h(times, ay):
     shutil.move('grafico.pdf', FOLDER_NAME)
     # plt.show()
 
-    """plt.title('Posti occupati nelle ultime 24 ore')
-    plt.xlabel('Orario')
-    plt.ylabel('Num posti occupati')"""
 
-
-def write_pdf(ax, ay):
+def write_pdf(times, posti):
 
     filename = 'statistiche.pdf'
+    new_times = []
+    new_posti = []
+    times_sorted = sorted(times)
+    for m in range(len(times_sorted)):
+        indice_cercare = times_sorted[m]
+        indice = times.index(indice_cercare)
+        new_posti.append(posti[indice])
+        if len(str(indice_cercare)) == 1:
+            ora = "{0}{1}:00".format("0", str(indice_cercare))
+        else:
+            ora = "{0}:00".format(str(indice_cercare))
+        new_times.append(ora)
 
     pdf = FPDF(orientation='L', unit='mm', format='A4')
     pdf.add_page()
     pdf.set_xy(0, 0)
-    pdf.set_font('arial', 'B', 13.0)
+    pdf.set_font('arial', 'B', 12)
+    pdf.cell(10)
+    pdf.cell(60, 10, 'Ora', 0, 0, 'C')
+    pdf.cell(60, 10, 'Numero posti occupati', 0, 1, 'C')
 
-    pdf.cell(ln=0, h=5.0, align='L', w=0, txt='', border=0)
-
-    for k in range(0, len(ax), 1):
-        pdf.cell(ln=k, h=5.0, align='L', w=0, txt='alle '+str(ax[k])+' il numero di posti occupati è '+str(ay[k]), border=0)
+    for k in range(0, len(times)):
+        pdf.cell(60, 10, '%s' % (str(new_times[k])), 0, 0, 'C')
+        pdf.cell(60, 10, '%s' % (str(new_posti[k])), 0, 1, 'C')
 
     pdf.output(filename, 'F')
     shutil.move(filename, FOLDER_NAME)

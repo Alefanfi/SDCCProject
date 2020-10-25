@@ -5,8 +5,6 @@ import random
 import sys
 import threading
 import time
-import pyqtgraph
-import numpy
 import matplotlib.pyplot as plt
 
 import requests
@@ -82,8 +80,8 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
         url = "http://" + proxy_ip + ":" + str(proxy_port) + "/stats?hash=" + str(self.rnum)
         r = requests.get(url)
         testoAnalisi = r.text
-
         appo = testoAnalisi.replace("}", "")
+        appo = appo.replace("{", "")
         appo = appo.replace('"', "")
         appo = appo.replace("'", "")
         appo = appo.replace(",", "")
@@ -92,8 +90,10 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
         orario = []
         numeroPosti = []
         new_numeroPosti = []
+        print(appo)
         for i in range(len(appo_split_n)):
             appo_split_analisi = appo_split_n[i].split(":")
+            print(appo_split_n[i])
             if len(appo_split_analisi) > 1:
                 orario.append(int(appo_split_analisi[0]))
                 numeroPosti.append(appo_split_analisi[1])
@@ -283,71 +283,3 @@ if __name__ == "__main__":
 
         except Exception as eccezione:
             pass
-
-"""
-def sensor_info(server_ip, server_port):
-
-    url = "http://" + server_ip + ":" + str(server_port) + "/all"
-    r = requests.get(url)
-    print(r.text)
-
-    data = json.loads(r.text)
-
-    show_parking(data)
-
-
-def stats_info(server_ip, server_port):
-    url = "http://" + server_ip + ":" + str(server_port) + "/stats"
-    r = requests.get(url)
-    print(r.text)
-
-
-if __name__ == "__main__":
-
-    host = "localhost"
-    port = 8080
-
-    print("---- WELCOME ----\n\n"
-          "park - Shows in the parking lot which places are taken\n"
-          "stats - Shows the statistics on the last week\n"
-          "quit - Quit")
-
-    while True:
-        text = input("--> ")
-
-        if text == "park":
-            sensor_info(host, port)
-
-        elif text == "stats":
-            stats_info(host, port)
-
-        elif text == "quit":
-            sys.exit()
-
-    # Create a TCP/IP socket
-    sock = socket.create_connection(('54.159.110.76', 10000))
-
-    # Connect the socket to the port where the server is listening
-    server_address = ('localhost', 10000)
-    print('connecting to' + str(server_address), sys.stderr)
-
-    try:
-
-        # Send data
-        message = 'This is the message.  It will be repeated.'
-        print('sending: ' + message, sys.stderr)
-        sock.sendall(message.encode())
-
-        # Look for the response
-        amount_received = 0
-        amount_expected = len(message)
-
-        while amount_received < amount_expected:
-            data = sock.recv(16).decode()
-            amount_received += len(data)
-            print('received: ' + str(data), sys.stderr)
-
-    finally:
-        print('closing socket', sys.stderr)
-        sock.close()
-"""

@@ -61,18 +61,21 @@ def create_stats():
     while True:
         time.sleep(60)  # Ogni ora
 
-        print(fog)
-        dao.insert_value(fog)  # Inserisce nel database i valori raccolti
-        stats.update(dao.get_last_24h())  # Recupera dal database le statistiche aggiornate sulle ultime 24h
+        if not bool(fog):
+            pass
+        else:
+            print(fog)
+            dao.insert_value(fog)  # Inserisce nel database i valori raccolti
+            stats.update(dao.get_last_24h())  # Recupera dal database le statistiche aggiornate sulle ultime 24h
 
-        ax = []
-        ay = []
-        for x in stats:
-            ax.append(x)
-            ay.append((stats[x]))
-        grafici.create_plot_24h(ax, ay)
-        grafici.create_plot_24h(ax, ay)
-        grafici.merge_pdfs()
+            ax = []
+            ay = []
+            for x in stats:
+                ax.append(x)
+                ay.append((stats[x]))
+            grafici.create_plot_24h(ax, ay)
+            grafici.create_plot_24h(ax, ay)
+            grafici.merge_pdfs()
 
 
 if __name__ == "__main__":
