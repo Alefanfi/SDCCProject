@@ -101,10 +101,16 @@ def sending_thread():
     while True:
         time.sleep(10)
 
-        message = json.dumps(local).encode('utf-8')
-        fog_server.sendto(message, ('<broadcast>', 8081))
+        if len(local) > 0:
 
-        local.clear()
+            old_local = local.copy()
+            local.clear()
+
+            print(old_local, file=sys.stderr)
+            message = json.dumps(old_local).encode('utf-8')
+            fog_server.sendto(message, ('<broadcast>', 8081))
+
+            old_local.clear()
 
         """
         Decommentare se si vogliono vedere i valori dei duei dict mantenuti dal nodo fog
