@@ -1,5 +1,5 @@
 # SDCCProject
-![parking now logo]()
+![parking now logo](https://github.com/Alefanfi/SDCCProject/blob/master/ClientWindows/gui/logo.png?raw=true)
 
 ## Requirements
 This project uses docker and docker-compose to simulate the fog nodes locally.
