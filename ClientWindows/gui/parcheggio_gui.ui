@@ -21,7 +21,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>depositphotos_73409341-stock-photo-parking-area-on-the-road.jpg</normaloff>depositphotos_73409341-stock-photo-parking-area-on-the-road.jpg</iconset>
+    <normaloff>logo.png</normaloff>logo.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QLineEdit" name="p1">
