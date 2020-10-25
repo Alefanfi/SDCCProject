@@ -2,10 +2,10 @@
   "aws_key_id":"Add aws key id",
   "aws_secret_key":"Add aws secret key",
   "aws_session_token":"Add aws session token",
-  "bucket_name":"s3bucketparkingnow",
+  "bucket_name":"Add s3 bucket name",
   "folder_name":"fileS3",
   "host":"localhost",
   "user":"root",
-  "passwd": "Mysqlpass93",
-  "database":"mydatabase"
+  "passwd": "Add password for sql database",
+  "database":"Add database name"
 }
