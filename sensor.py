@@ -1,4 +1,3 @@
-import json
 import random
 import sys
 import time
@@ -12,13 +11,12 @@ proxy_port = 5000
 
 
 class Sensor(Thread):
-    def __init__(self, num, server_ip, port, hashnum):
+    def __init__(self, num, server_ip, port):
         Thread.__init__(self)
         self.server_ip = server_ip
         self.port = port
         self.num = num                  # Sensors number
         self.vacant = 0                 # Initially the parking spot is vacant
-        self.hashnum = hashnum          # Hash used by the nginx proxy for session persistence
 
     def run(self):
 
@@ -39,7 +37,7 @@ class Sensor(Thread):
             
             """
 
-            r = requests.post("http://" + self.server_ip + ":" + str(self.port) + "/update?hash="+str(self.hashnum),
+            r = requests.post("http://" + self.server_ip + ":" + str(self.port) + "/update?hash="+str(self.num),
                               data={'num': self.num, 'val': self.vacant})
 
             if r.status_code != 200:
@@ -51,18 +49,6 @@ class Sensor(Thread):
 if __name__ == "__main__":
 
     # Creating sensors
-    for i in range(1, 9):
-        s = Sensor(i, proxy_ip, proxy_port, 1)
-        s.start()
-
-    for i in range(9, 17):
-        s = Sensor(i, proxy_ip, proxy_port, 2)
-        s.start()
-
-    for i in range(17, 25):
-        s = Sensor(i, proxy_ip, proxy_port, 3)
-        s.start()
-
-    for i in range(25, 33):
-        s = Sensor(i, proxy_ip, proxy_port, 4)
+    for i in range(1, 33):
+        s = Sensor(i, proxy_ip, proxy_port)
         s.start()
