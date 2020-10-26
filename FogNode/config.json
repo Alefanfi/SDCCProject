@@ -1,0 +1,5 @@
+{
+  "ec2_server_ip": "3.232.43.204",
+  "ec2_server_port": 5000,
+  "broadcast_port": 8081
+}

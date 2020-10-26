@@ -11,38 +11,45 @@ from flask_restful import Api
 app = Flask(__name__)
 api = Api(app)
 
-local = dict()  # Dizionario con i sensori locali
-total = dict()  # Dizionario dei sensori afferenti ad altri nodi fog
+local = dict()          # Values of local sensors
+total = dict()          # Values of all sensors
+auto = dict()           # How many times each parking spot was used in the last hour
+stats = dict()          # Statistics on the last 24 hours
 
-auto = dict()  # Numero di volte in cui quel parcheggio è stato preso nell'ultima ora
-stats = dict()  # Dizionario con le statistiche dell'ultima settimana
-
-server_ip = "3.232.43.204"
-server_port = 5000
-
-my_ip = socket.gethostbyname(socket.gethostname())
+server_ip = ""
+server_port = 0
+broadcast_port = 0
 
 
-@app.route('/', methods=["GET"])
-def use_me():
-    return jsonify({'name': my_ip})
+# Loads configurations from config.json file
+def loadConfig():
+
+    global server_ip
+    global server_port
+    global broadcast_port
+
+    config_file = open("config.json", "r")
+    json_object = json.load(config_file)
+    config_file.close()
+
+    server_ip = json_object['ec2_server_ip']
+    server_port = json_object['ec2_server_port']
+    broadcast_port = json_object['broadcast_port']
 
 
+# Returns the values of all sensors
 @app.route('/all', methods=["GET"])
 def get_all():
-    return jsonify(total)
+    return jsonify(total), 200
 
 
+# Returns the statistics taken from the ec2 server
 @app.route('/stats', methods=["GET"])
 def get_stats():
-    r = requests.get("http://" + server_ip + ":" + str(server_port) + "/get_stat")
-    print(r, file=sys.stderr)
-
-    data = json.loads(r.text)
-
-    return jsonify(data)
+    return jsonify(stats), 200
 
 
+# Updates the value of a sensor both in local and total
 @app.route('/update', methods=["POST"])
 def update():
     try:
@@ -51,46 +58,24 @@ def update():
         sensor_val = request.form['val']
 
         if sensor_num not in local:
-            local[sensor_num] = sensor_val
             auto[sensor_num] = 1
         else:
+            # If a new car has taken the parking spot it updates the dictionary auto
             if local[sensor_num] == '0' and sensor_val == '1':
                 auto[sensor_num] += 1
 
-            local.update({sensor_num: sensor_val})
+        local.update({sensor_num: sensor_val})
+        total.update({sensor_num: sensor_val})
 
-        total.update(local)
-
-        return {'DONE': "OK"}
-
-    except Exception as e:
-
-        return {'Exception': e.args}
-
-
-"""
-@app.route('/merge', methods=["POST"])
-def merge():
-    try:
-        sens = json.loads(request.data)
-
-        for key, value in sens.items():
-            if key not in total:
-                total[key] = value
-            else:
-                total.update({key: value})
-
-        return {'DONE': "OK"}
+        return json.dumps({'Done': "OK"}), 200, {'ContentType': 'application/json'}
 
     except Exception as e:
 
-        app.logger.error(e.args)
-
-        return {'Exception': e.args}
-"""
+        return json.dumps({'Exception': e.args}), 500, {'ContentType': 'application/json'}
 
 
-def sending_thread():
+# Thread which sends periodically the updated values of its sensors to the other fog nodes
+def sendingThread():
 
     fog_server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     fog_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
@@ -101,80 +86,63 @@ def sending_thread():
     while True:
         time.sleep(10)
 
-        if len(local) > 0:
+        old_local = local.copy()
+        local.clear()
 
-            old_local = local.copy()
-            local.clear()
+        # Checks if the dictionary has updates
+        if len(old_local) > 0:
 
-            print(old_local, file=sys.stderr)
             message = json.dumps(old_local).encode('utf-8')
-            fog_server.sendto(message, ('<broadcast>', 8081))
+            fog_server.sendto(message, ('<broadcast>', broadcast_port))
 
             old_local.clear()
 
-        """
-        Decommentare se si vogliono vedere i valori dei duei dict mantenuti dal nodo fog
 
-        print(local, file=sys.stderr)
-        print(other, file=sys.stderr)
-
-
-        data = json.dumps(local)
-
-        r = requests.post("http://" + "fog0" + ":" + str(8080) + "/merge",
-                          data=data)
-        print(r, file=sys.stderr)
-        r = requests.post("http://" + "fog1" + ":" + str(8080) + "/merge",
-                          data=data)
-        print(r, file=sys.stderr)
-        r = requests.post("http://" + "fog2" + ":" + str(8080) + "/merge",
-                          data=data)
-        print(r, file=sys.stderr)
-        r = requests.post("http://" + "fog3" + ":" + str(8080) + "/merge",
-                          data=data)
-        print(r, file=sys.stderr)
-        """
-
-
-def listen_for_updates():
+# Thread which listens for updates from other nodes
+def listeningThread():
 
     fog_client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     fog_client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
     # Enable broadcasting mode
     fog_client.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    fog_client.bind(("", broadcast_port))
 
-    fog_client.bind(("", 8081))
     while True:
-        # Thanks @seym45 for a fix
-        data, addr = fog_client.recvfrom(2000)
-        print("received message: %s" % data, file=sys.stderr)
 
+        data, addr = fog_client.recvfrom(2000)
         sens = json.loads(data.decode('utf-8'))
 
         for key, value in sens.items():
-            if key not in total:
-                total[key] = value
-            else:
-                total.update({key: value})
+            total.update({key: value})
 
 
-def stats_thread():
+# Thread which periodically sends the sensors values to the ec2 server and updates the local stats dictionary
+def statsThread():
     while True:
-        time.sleep(60)  # Aggiornamento ogni ora
+        time.sleep(60*60)  # Update every hour
 
         r = requests.post("http://" + server_ip + ":" + str(server_port) + "/fog_info", data=json.dumps(auto))
         print(r, file=sys.stderr)
 
         auto.clear()
 
+        r = requests.get("http://" + server_ip + ":" + str(server_port) + "/get_stat")
+        print(r, file=sys.stderr)
+        data = json.loads(r.text)
+
+        for key, value in data:
+            stats.update({key: value})
+
 
 if __name__ == '__main__':
 
-    st = threading.Thread(target=stats_thread)
+    loadConfig()
+
+    st = threading.Thread(target=statsThread)
     st.daemon = True
-    t = threading.Thread(target=sending_thread)
+    t = threading.Thread(target=sendingThread)
     t.daemon = True
-    t1 = threading.Thread(target=listen_for_updates)
+    t1 = threading.Thread(target=listeningThread)
     t1.daemon = True
 
     st.start()

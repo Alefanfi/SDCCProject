@@ -1,9 +1,11 @@
+import json
 import random
+import sys
 import time
+import requests
 
 from threading import Thread
 
-import requests
 
 proxy_ip = "findfognode"
 proxy_port = 5000
@@ -12,11 +14,11 @@ proxy_port = 5000
 class Sensor(Thread):
     def __init__(self, num, server_ip, port, hashnum):
         Thread.__init__(self)
-        self.server_ip = server_ip  # ip del server
-        self.port = port            # porta a cui collegarsi
-        self.num = num              # numero del sensore
-        self.vacant = 0             # posto auto inizialmente considerato libero
-        self.hashnum = hashnum
+        self.server_ip = server_ip
+        self.port = port
+        self.num = num                  # Sensors number
+        self.vacant = 0                 # Initially the parking spot is vacant
+        self.hashnum = hashnum          # Hash used by the nginx proxy for session persistence
 
     def run(self):
 
@@ -30,22 +32,25 @@ class Sensor(Thread):
             else:
                 self.vacant = 0
 
-            # Decommentare se si vuole vedere cosa fa il sensore
+            """
+            Uncomment this to see the values used by the sensors
+            
             print("Sensor" + str(self.num) + " - " + str(self.vacant))
+            
+            """
 
             r = requests.post("http://" + self.server_ip + ":" + str(self.port) + "/update?hash="+str(self.hashnum),
                               data={'num': self.num, 'val': self.vacant})
 
             if r.status_code != 200:
-
-                print(r.text)  # displays the error
+                print(r.text, file=sys.stderr)  # Displays the error
 
             time.sleep(5)
 
 
 if __name__ == "__main__":
 
-    # creaiamo un insieme di sensori che inviino i dati ai diversi nodi fog
+    # Creating sensors
     for i in range(1, 9):
         s = Sensor(i, proxy_ip, proxy_port, 1)
         s.start()

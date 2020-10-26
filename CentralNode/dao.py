@@ -12,7 +12,7 @@ class Dao:
         self.tb_name = tb_name
         self.createDB()
 
-    # Crea il database con una tabella
+    # Creates the database and the table
     def createDB(self):
 
         self.db = mysql.connect(
@@ -30,23 +30,22 @@ class Dao:
         sql = "CREATE TABLE IF NOT EXISTS sensors (sensor VARCHAR(255), num VARCHAR(255), date DATETIME)"
         mycursor.execute(sql)
 
-    # Inserisce i nuovi valori presi da un dizionario nel database
-    def insert_value(self, values):
-        mycursor = self.db.cursor()
+    # Inserts new values taken from a dictionary
+    def insertValue(self, values):
+        dbcursor = self.db.cursor()
 
         sql = "INSERT INTO sensors (sensor, num, date) VALUES (%s, %s, NOW())"
         for k in values:
             val = (k, values[k])
 
-            mycursor.execute(sql, val)
-            # print(mycursor.rowcount, "record inserted.")
+            dbcursor.execute(sql, val)
 
         self.db.commit()
 
-    # Crea un dizionario con le statistiche sulle ultime 24h
-    def get_last_24h(self):
+    # Creates a dictionary with the statistics with the last 24 hours
+    def getLast24h(self):
         h24 = dict()
-        mycursor = self.db.cursor()
+        dbcursor = self.db.cursor()
         date = datetime.now()
 
         for i in range(1, 25):
@@ -61,12 +60,12 @@ class Dao:
 
             val = (str_start, str_end)
             sql = "SELECT * FROM sensors WHERE date BETWEEN %s AND %s"
-            mycursor.execute(sql, val)
+            dbcursor.execute(sql, val)
 
-            for row in mycursor.fetchall():
+            for row in dbcursor.fetchall():
                 new = old + int(row[1])
                 h24.update({hour: new})
 
-        mycursor.close()
+        dbcursor.close()
 
         return h24

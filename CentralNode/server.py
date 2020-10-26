@@ -5,17 +5,16 @@ import time
 from flask import Flask, request, jsonify
 from flask_restful import Api
 from CentralNode.dao import Dao
-
 from CentralNode import grafici
 
 app = Flask(__name__)
 api = Api(app)
 
-stats = dict()  # Dizionario con le statistiche delle ultime 24h
-fog = dict()  # Dizionario con i valori dell'ultima ora dei nodi fog
+stats = dict()      # Statistics on the last 24 hours
+fog = dict()        # How many times each parking spot was used in the last hour
 
 
-# Aggiorna i valori raccolti dai sensori nel dizionario fog
+# Updates values taken from fog nodes in the dictionary fog
 @app.route('/fog_info', methods=["POST"])
 def set_fog_info():
     try:
@@ -23,30 +22,25 @@ def set_fog_info():
         sens = json.loads(request.data)
 
         for key, value in sens.items():
-            if key not in fog:
-                fog[key] = value
-            else:
-                fog.update({key: value})
+            fog.update({key: value})
 
-        return {'DONE': "OK"}
+        return json.dumps({'Done': "OK"}), 200, {'ContentType': 'application/json'}
 
     except Exception as e:
 
-        app.logger.error(e.args)
-
-        return {'Exception': e.args}
+        return json.dumps({'Exception': e.args}), 500, {'ContentType': 'application/json'}
 
 
-# Ritorna le statistiche contenute nel dizionario stats
+# Returns the statistics of the last 24 hours
 @app.route('/get_stat', methods=["GET"])
 def send_stats():
-    return jsonify(stats)
+    return jsonify(stats), 200
 
 
-# Thread function che si occupa della creazione delle statistiche
+# Thread which periodically creates the new stats values
 def create_stats():
 
-    # Creazione del database
+    # Loading database configuration
     config_file = open("config.json", "r")
     json_object = json.load(config_file)
     config_file.close()
@@ -59,23 +53,23 @@ def create_stats():
     dao = Dao(host, user, passwd, db, "sensors")
 
     while True:
-        time.sleep(60)  # Ogni ora
+        time.sleep(60*60)  # Update every hour
 
         if not bool(fog):
             pass
         else:
             print(fog)
-            dao.insert_value(fog)  # Inserisce nel database i valori raccolti
-            stats.update(dao.get_last_24h())  # Recupera dal database le statistiche aggiornate sulle ultime 24h
+            dao.insertValue(fog)  # Inserts values into the database
+            stats.update(dao.getLast24h())  # Updates the statistics
 
             ax = []
             ay = []
             for x in stats:
                 ax.append(x)
                 ay.append((stats[x]))
-            grafici.create_plot_24h(ax, ay)
-            grafici.create_plot_24h(ax, ay)
-            grafici.merge_pdfs()
+            grafici.createPlot24h(ax, ay)
+            grafici.createPlot24h(ax, ay)
+            grafici.mergePdfs()
 
 
 if __name__ == "__main__":

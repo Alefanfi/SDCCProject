@@ -25,7 +25,7 @@ def readJSON():
         config_file.close()
 
 
-def create_plot_24h(times, ay):
+def createPlot24h(times, ay):
     new_times = []
     new_ay = []
     times_sorted = sorted(times)
@@ -47,7 +47,7 @@ def create_plot_24h(times, ay):
     # plt.show()
 
 
-def write_pdf(times, posti):
+def writePdf(times, posti):
 
     filename = 'statistiche.pdf'
     new_times = []
@@ -79,9 +79,9 @@ def write_pdf(times, posti):
     shutil.move(filename, FOLDER_NAME)
 
 
-def merge_pdfs():
+def mergePdfs():
     readJSON()
-    files=['files3/grafico.pdf', 'files3/statistiche.pdf']
+    files = ['files3/grafico.pdf', 'files3/statistiche.pdf']
     pdf_writer = PyPDF2.PdfFileWriter()
 
     for path in files:
