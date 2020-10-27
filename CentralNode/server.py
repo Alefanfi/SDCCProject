@@ -62,6 +62,8 @@ def create_stats():
             dao.insertValue(fog)  # Inserts values into the database
             stats.update(dao.getLast24h())  # Updates the statistics
 
+            """Costruisce gli array di valori che verranno ad essere utilizzati per la realizzazione dei grafici e 
+            delle statistiche """
             ax = []
             ay = []
             for x in stats:

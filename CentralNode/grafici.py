@@ -14,7 +14,6 @@ BUCKET_NAME = ""
 
 
 def readJSON():
-
     global FOLDER_NAME, BUCKET_NAME
     with open('config.json') as config_file:
         data = json.load(config_file)
@@ -48,7 +47,6 @@ def createPlot24h(times, ay):
 
 
 def writePdf(times, posti):
-
     filename = 'statistiche.pdf'
     new_times = []
     new_posti = []
@@ -97,9 +95,18 @@ def mergePdfs():
     with open(output, 'wb') as out:
         pdf_writer.write(out)
         out.close()
+
+    # Controllo se il bucket esiste
+    res = s3api.bucket_exists(BUCKET_NAME)
+    # Se il bucket non esiste lo creo
+    if not res:
+        s3api.create_bucket(BUCKET_NAME)
+
+    # carico il file nel bucket
     s3api.upload_file(output, BUCKET_NAME)
     # shutil.move(output, FOLDER_NAME)
     os.remove(output)
 
+    # rimuovo i file che avevo creato
     for k in files:
         os.remove(k)
