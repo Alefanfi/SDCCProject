@@ -9,8 +9,8 @@ from PyQt5.QtCore import Qt, QTimer, QCoreApplication, QIODevice, QStringListMod
 from flask import request
 import matplotlib.pyplot as plt
 
-proxy_ip = "findfognode"    # Proxy server ip
-proxy_port = 5000           # Proxy server port
+proxy_ip = ""    # Proxy server ip
+proxy_port = 0           # Proxy server port
 
 qtCreatorFile = "gui/parcheggio_gui.ui"  # Gui file
 Ui_MainWindow, QtBaseClass = uic.loadUiType(qtCreatorFile)
@@ -28,6 +28,18 @@ taken = ("QLineEdit {\n"
          "    padding: 0 8px;\n"
          "    background: #cf4245;\n"
          "}")
+
+
+def readJSON():
+    global proxy_ip
+    global proxy_port
+    with open('config.json') as config_file:
+        data = json.load(config_file)
+
+        proxy_ip = data['proxy_ip']
+        proxy_port = data['proxy_port']
+
+        config_file.close()
 
 
 class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
