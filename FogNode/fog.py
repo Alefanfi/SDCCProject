@@ -74,7 +74,7 @@ def update():
         return json.dumps({'Exception': e.args}), 500, {'ContentType': 'application/json'}
 
 
-# Thread which sends periodically the updated values of its sensors to the other fog nodes
+# Thread which sends periodically the updated values of the sensors to the other fog nodes
 def sendingThread():
 
     fog_server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
