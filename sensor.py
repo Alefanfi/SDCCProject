@@ -30,13 +30,6 @@ class Sensor(Thread):
             else:
                 self.vacant = 0
 
-            """
-            Uncomment this to see the values used by the sensors
-            
-            print("Sensor" + str(self.num) + " - " + str(self.vacant))
-            
-            """
-
             r = requests.post("http://" + self.server_ip + ":" + str(self.port) + "/update?hash="+str(self.num),
                               data={'num': self.num, 'val': self.vacant})
 
