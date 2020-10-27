@@ -1,6 +1,4 @@
 {
-  "server_ip": "localhost",
-  "server_port": 8080,
   "proxy_ip": "findfognode",
   "proxy_port": 5000
 }
