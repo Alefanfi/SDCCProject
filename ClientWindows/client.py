@@ -230,8 +230,8 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
                 ora = "{0}:00".format(str(index_search))
             new_hour.append(ora)
         plt.figure(figsize=(15, 8))
-        plt.plot(hour, numAuto)
-        plt.xticks(hour)
+        plt.plot(new_hour, new_numAuto)
+        plt.xticks(new_hour)
 
         plt.show()
 
