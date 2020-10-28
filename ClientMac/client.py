@@ -8,8 +8,9 @@ import time
 import matplotlib.pyplot as plt
 
 import requests
-from PyQt5 import QtGui, QtWidgets, uic  # , QtSql
+from PyQt5 import QtWidgets, uic
 from PyQt5.QtCore import Qt, QCoreApplication
+
 
 proxy_ip = ""
 proxy_port = 0
@@ -17,32 +18,9 @@ proxy_port = 0
 qtCreatorFile = "gui/parcheggio_gui.ui"  # Enter file
 Ui_MainWindow, QtBaseClass = uic.loadUiType(qtCreatorFile)
 
-parcheggio_vuoto = ("QLineEdit {"
-                    "    border: 2px solid gray;"
-                    "    border-radius: 10px;"
-                    "    padding: 0 8px;"
-                    "    background-color: #33ff66;"
-                    "}")
 
-parcheggio_occupato = ("QLineEdit {"
-                       "    border: 2px solid red;"
-                       "    border-radius: 10px;"
-                       "    padding: 0 8px;"
-                       "    background: #cf4245;"
-                       "}")
-
-"""
-parcheggio_prenotato = ("QLineEdit {\n"
-                        "    border: 2px solid gray;\n"
-                        "    border-radius: 10px;\n"
-                        "    padding: 0 8px;\n"
-                        "    background: #ffcd12;\n"
-                        "}")
-"""
-
-
+# Loads configurations from config.json file
 def readJSON():
-
     global proxy_ip
     global proxy_port
     with open('config.json') as config_file:
@@ -55,15 +33,15 @@ def readJSON():
 
 
 class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
-    '''GUI principale'''
+    """GUI principale"""
 
     def __init__(self, rnum):
 
         QtWidgets.QMainWindow.__init__(self)
         Ui_MainWindow.__init__(self)
-
         self.rnum = rnum
         self.setupUi(self)
+        self.setFixedSize(800, 850)
 
         self.setWindowModality(Qt.NonModal)
         self.setAttribute(Qt.WA_PendingResizeEvent)
@@ -78,13 +56,7 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.label_7.show()
         self.label_7.mouseDoubleClickEvent = self.getStats
 
-        """
-        self.windowIcon.mouseDoubleClickEvent = self.getStats
-        
-        L'idea è quella di fare in modo che cliccando quì vengano inviate le statistiche, ma non funziona ... ancora ^^''
-        
-        """
-
+    # Contacts the fog node to get the statistics info
     def getStats(self, e):
 
         url = "http://" + proxy_ip + ":" + str(proxy_port) + "/stats?hash=" + str(self.rnum)
@@ -122,147 +94,159 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
 
         plt.figure(figsize=(15, 8))
         plt.plot(new_orario, new_numeroPosti)
+        plt.title('Statistics on the last 24 h')
         plt.xticks(new_orario)
 
         plt.show()
 
-
     def setOccupied(self, sensors):
 
+        empty = ("QLineEdit {"
+                 "border:2px solid gray;"
+                 "border-radius:10px;"
+                 "padding:0 8px;"
+                 "background-color:#33ff66;}")
+
+        taken = ("QLineEdit {"
+                 "border:2px solid red;"
+                 "border-radius:10px;"
+                 "padding:0 8px;"
+                 "background-color:#cf4245;}")
+
         if sensors.get('1', '0') == '1':
-            self.p1.setStyleSheet(parcheggio_occupato)
+            self.p1.setStyleSheet(taken)
         else:
-            self.p1.setStyleSheet(parcheggio_vuoto)
+            self.p1.setStyleSheet(empty)
         if sensors.get('2', '0') == '1':
-            self.p2.setStyleSheet(parcheggio_occupato)
+            self.p2.setStyleSheet(taken)
         else:
-            self.p2.setStyleSheet(parcheggio_vuoto)
+            self.p2.setStyleSheet(empty)
         if sensors.get('3', '0') == '1':
-            self.p3.setStyleSheet(parcheggio_occupato)
+            self.p3.setStyleSheet(taken)
         else:
-            self.p3.setStyleSheet(parcheggio_vuoto)
+            self.p3.setStyleSheet(empty)
         if sensors.get('4', '0') == '1':
-            self.p4.setStyleSheet(parcheggio_occupato)
+            self.p4.setStyleSheet(taken)
         else:
-            self.p4.setStyleSheet(parcheggio_vuoto)
+            self.p4.setStyleSheet(empty)
         if sensors.get('5', '0') == '1':
-            self.p5.setStyleSheet(parcheggio_occupato)
+            self.p5.setStyleSheet(taken)
         else:
-            self.p5.setStyleSheet(parcheggio_vuoto)
+            self.p5.setStyleSheet(empty)
         if sensors.get('6', '0') == '1':
-            self.p6.setStyleSheet(parcheggio_occupato)
+            self.p6.setStyleSheet(taken)
         else:
-            self.p6.setStyleSheet(parcheggio_vuoto)
+            self.p6.setStyleSheet(empty)
         if sensors.get('7', '0') == '1':
-            self.p7.setStyleSheet(parcheggio_occupato)
+            self.p7.setStyleSheet(taken)
         else:
-            self.p7.setStyleSheet(parcheggio_vuoto)
+            self.p7.setStyleSheet(empty)
         if sensors.get('8', '0') == '1':
-            self.p8.setStyleSheet(parcheggio_occupato)
+            self.p8.setStyleSheet(taken)
         else:
-            self.p8.setStyleSheet(parcheggio_vuoto)
+            self.p8.setStyleSheet(empty)
         if sensors.get('9', '0') == '1':
-            self.p9.setStyleSheet(parcheggio_occupato)
+            self.p9.setStyleSheet(taken)
         else:
-            self.p9.setStyleSheet(parcheggio_vuoto)
+            self.p9.setStyleSheet(empty)
         if sensors.get('10', '0') == '1':
-            self.p10.setStyleSheet(parcheggio_occupato)
+            self.p10.setStyleSheet(taken)
         else:
-            self.p10.setStyleSheet(parcheggio_vuoto)
+            self.p10.setStyleSheet(empty)
         if sensors.get('11', '0') == '1':
-            self.p11.setStyleSheet(parcheggio_occupato)
+            self.p11.setStyleSheet(taken)
         else:
-            self.p11.setStyleSheet(parcheggio_vuoto)
+            self.p11.setStyleSheet(empty)
         if sensors.get('12', '0') == '1':
-            self.p12.setStyleSheet(parcheggio_occupato)
+            self.p12.setStyleSheet(taken)
         else:
-            self.p12.setStyleSheet(parcheggio_vuoto)
+            self.p12.setStyleSheet(empty)
         if sensors.get('13', '0') == '1':
-            self.p13.setStyleSheet(parcheggio_occupato)
+            self.p13.setStyleSheet(taken)
         else:
-            self.p13.setStyleSheet(parcheggio_vuoto)
+            self.p13.setStyleSheet(empty)
         if sensors.get('14', '0') == '1':
-            self.p14.setStyleSheet(parcheggio_occupato)
+            self.p14.setStyleSheet(taken)
         else:
-            self.p14.setStyleSheet(parcheggio_vuoto)
+            self.p14.setStyleSheet(empty)
         if sensors.get('15', '0') == '1':
-            self.p15.setStyleSheet(parcheggio_occupato)
+            self.p15.setStyleSheet(taken)
         else:
-            self.p15.setStyleSheet(parcheggio_vuoto)
+            self.p15.setStyleSheet(empty)
         if sensors.get('16', '0') == '1':
-            self.p16.setStyleSheet(parcheggio_occupato)
+            self.p16.setStyleSheet(taken)
         else:
-            self.p16.setStyleSheet(parcheggio_vuoto)
+            self.p16.setStyleSheet(empty)
         if sensors.get('17', '0') == '1':
-            self.p17.setStyleSheet(parcheggio_occupato)
+            self.p17.setStyleSheet(taken)
         else:
-            self.p17.setStyleSheet(parcheggio_vuoto)
+            self.p17.setStyleSheet(empty)
         if sensors.get('18', '0') == '1':
-            self.p18.setStyleSheet(parcheggio_occupato)
+            self.p18.setStyleSheet(taken)
         else:
-            self.p18.setStyleSheet(parcheggio_vuoto)
+            self.p18.setStyleSheet(empty)
         if sensors.get('19', '0') == '1':
-            self.p19.setStyleSheet(parcheggio_occupato)
+            self.p19.setStyleSheet(taken)
         else:
-            self.p19.setStyleSheet(parcheggio_vuoto)
+            self.p19.setStyleSheet(empty)
         if sensors.get('20', '0') == '1':
-            self.p20.setStyleSheet(parcheggio_occupato)
+            self.p20.setStyleSheet(taken)
         else:
-            self.p20.setStyleSheet(parcheggio_vuoto)
+            self.p20.setStyleSheet(empty)
         if sensors.get('21', '0') == '1':
-            self.p21.setStyleSheet(parcheggio_occupato)
+            self.p21.setStyleSheet(taken)
         else:
-            self.p21.setStyleSheet(parcheggio_vuoto)
+            self.p21.setStyleSheet(empty)
         if sensors.get('22', '0') == '1':
-            self.p22.setStyleSheet(parcheggio_occupato)
+            self.p22.setStyleSheet(taken)
         else:
-            self.p22.setStyleSheet(parcheggio_vuoto)
+            self.p22.setStyleSheet(empty)
         if sensors.get('23', '0') == '1':
-            self.p23.setStyleSheet(parcheggio_occupato)
+            self.p23.setStyleSheet(taken)
         else:
-            self.p23.setStyleSheet(parcheggio_vuoto)
+            self.p23.setStyleSheet(empty)
         if sensors.get('24', '0') == '1':
-            self.p24.setStyleSheet(parcheggio_occupato)
+            self.p24.setStyleSheet(taken)
         else:
-            self.p24.setStyleSheet(parcheggio_vuoto)
+            self.p24.setStyleSheet(empty)
         if sensors.get('25', '0') == '1':
-            self.p25.setStyleSheet(parcheggio_occupato)
+            self.p25.setStyleSheet(taken)
         else:
-            self.p25.setStyleSheet(parcheggio_vuoto)
+            self.p25.setStyleSheet(empty)
         if sensors.get('26', '0') == '1':
-            self.p26.setStyleSheet(parcheggio_occupato)
+            self.p26.setStyleSheet(taken)
         else:
-            self.p26.setStyleSheet(parcheggio_vuoto)
+            self.p26.setStyleSheet(empty)
         if sensors.get('27', '0') == '1':
-            self.p27.setStyleSheet(parcheggio_occupato)
+            self.p27.setStyleSheet(taken)
         else:
-            self.p27.setStyleSheet(parcheggio_vuoto)
+            self.p27.setStyleSheet(empty)
         if sensors.get('28', '0') == '1':
-            self.p28.setStyleSheet(parcheggio_occupato)
+            self.p28.setStyleSheet(taken)
         else:
-            self.p28.setStyleSheet(parcheggio_vuoto)
+            self.p28.setStyleSheet(empty)
         if sensors.get('29', '0') == '1':
-            self.p29.setStyleSheet(parcheggio_occupato)
+            self.p29.setStyleSheet(taken)
         else:
-            self.p29.setStyleSheet(parcheggio_vuoto)
+            self.p29.setStyleSheet(empty)
         if sensors.get('30', '0') == '1':
-            self.p30.setStyleSheet(parcheggio_occupato)
+            self.p30.setStyleSheet(taken)
         else:
-            self.p30.setStyleSheet(parcheggio_vuoto)
+            self.p30.setStyleSheet(empty)
         if sensors.get('31', '0') == '1':
-            self.p31.setStyleSheet(parcheggio_occupato)
+            self.p31.setStyleSheet(taken)
         else:
-            self.p31.setStyleSheet(parcheggio_vuoto)
+            self.p31.setStyleSheet(empty)
         if sensors.get('32', '0') == '1':
-            self.p32.setStyleSheet(parcheggio_occupato)
+            self.p32.setStyleSheet(taken)
         else:
-            self.p32.setStyleSheet(parcheggio_vuoto)
+            self.p32.setStyleSheet(empty)
         QCoreApplication.processEvents()
 
 
+# Contacts the fog node to update the parking spots
 def show_parking(window):
     while True:
-
         url = "http://" + proxy_ip + ":" + str(proxy_port) + "/all?hash=" + str(window.rnum)
         r = requests.get(url)
         # print(r.text)
@@ -275,16 +259,18 @@ def show_parking(window):
 
 if __name__ == "__main__":
 
+    # Loads configuration
     readJSON()
 
+    # Generating random value for nginx server session persistence
     seedValue = random.randrange(sys.maxsize)
     random.seed(seedValue)
     num = random.randint(2000, 3000)
 
     ctypes.CDLL("libc.{}".format("so.6" if platform.uname()[0] != "Darwin" else "dylib"))
-    appo = QtWidgets.QApplication.instance()
+    app = QtWidgets.QApplication.instance()
 
-    if appo is None:
+    if app is None:
         application = QtWidgets.QApplication(sys.argv)
         win = MyApp(num)
 
@@ -296,5 +282,6 @@ if __name__ == "__main__":
             win.show()
             sys.exit(application.exec_())
 
-        except Exception as eccezione:
-            pass
+        except Exception as e:
+
+            print(e.args)

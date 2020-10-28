@@ -129,10 +129,10 @@ def statsThread():
         print(r, file=sys.stderr)
         data = json.loads(r.text)
 
-        for key, value in data.items():
+        for key, value in data.items:
             stats.update({key: value})
 
-        time.sleep(60*60)  # Update every hour
+        time.sleep(60 * 60)  # Update every hour
 
 
 if __name__ == '__main__':

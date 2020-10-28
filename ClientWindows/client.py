@@ -254,8 +254,6 @@ def showParking(window):
 
 if __name__ == "__main__":
 
-    readJSON()
-
     # Loading configuration
     readJSON()
 
