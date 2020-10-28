@@ -44,11 +44,11 @@ class Sensor(Thread):
             else:
                 self.vacant = 0
 
-            r = requests.post("http://" + self.server_ip + ":" + str(self.port) + "/update?hash="+str(self.num),
-                              data={'num': self.num, 'val': self.vacant})
-
-            if r.status_code != 200:
-                print(r.text, file=sys.stderr)  # Displays the error
+            try:
+                r = requests.post("http://" + self.server_ip + ":" + str(self.port) + "/update?hash=" + str(self.num),
+                                  data={'num': self.num, 'val': self.vacant})
+            except requests.ConnectionError as e:
+                print(e.args, file=sys.stderr)  # Displays the error
 
             time.sleep(5)
 

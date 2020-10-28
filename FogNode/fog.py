@@ -11,10 +11,10 @@ from flask_restful import Api
 app = Flask(__name__)
 api = Api(app)
 
-local = dict()          # Values of local sensors
-total = dict()          # Values of all sensors
-auto = dict()           # How many times each parking spot was used in the last hour
-stats = dict()          # Statistics on the last 24 hours
+local = dict()  # Values of local sensors
+total = dict()  # Values of all sensors
+auto = dict()  # How many times each parking spot was used in the last hour
+stats = dict()  # Statistics on the last 24 hours
 
 server_ip = ""
 server_port = 0
@@ -23,7 +23,6 @@ broadcast_port = 0
 
 # Loads configurations from config.json file
 def loadConfig():
-
     global server_ip
     global server_port
     global broadcast_port
@@ -76,7 +75,6 @@ def update():
 
 # Thread which sends periodically the updated values of the sensors to the other fog nodes
 def sendingThread():
-
     fog_server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     fog_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
     # Enable broadcasting mode
@@ -91,7 +89,6 @@ def sendingThread():
 
         # Checks if the dictionary has updates
         if len(old_local) > 0:
-
             message = json.dumps(old_local).encode('utf-8')
             fog_server.sendto(message, ('<broadcast>', broadcast_port))
 
@@ -100,7 +97,6 @@ def sendingThread():
 
 # Thread which listens for updates from other nodes
 def listeningThread():
-
     fog_client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     fog_client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
     # Enable broadcasting mode
@@ -120,23 +116,24 @@ def listeningThread():
 def statsThread():
     while True:
 
-        r = requests.post("http://" + server_ip + ":" + str(server_port) + "/fog_info", data=json.dumps(auto))
-        print(r, file=sys.stderr)
+        try:
+            r = requests.post("http://" + server_ip + ":" + str(server_port) + "/fog_info", data=json.dumps(auto))
+            auto.clear()
 
-        auto.clear()
+            r = requests.get("http://" + server_ip + ":" + str(server_port) + "/get_stat")
 
-        r = requests.get("http://" + server_ip + ":" + str(server_port) + "/get_stat")
-        print(r, file=sys.stderr)
-        data = json.loads(r.text)
+            data = json.loads(r.text)
 
-        for key, value in data.items:
-            stats.update({key: value})
+            for key, value in data.items():
+                stats.update({key: value})
+
+        except requests.ConnectionError as e:
+            print(e.args, file=sys.stderr)  # Displays the error
 
         time.sleep(60 * 60)  # Update every hour
 
 
 if __name__ == '__main__':
-
     loadConfig()
 
     st = threading.Thread(target=statsThread)
