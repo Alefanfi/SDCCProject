@@ -11,11 +11,8 @@ import requests
 from PyQt5 import QtGui, QtWidgets, uic  # , QtSql
 from PyQt5.QtCore import Qt, QCoreApplication
 
-server_ip = "localhost"
-server_port = 8080
-
-proxy_ip = "findfognode"
-proxy_port = 5000
+proxy_ip = ""
+proxy_port = 0
 
 qtCreatorFile = "gui/parcheggio_gui.ui"  # Enter file
 Ui_MainWindow, QtBaseClass = uic.loadUiType(qtCreatorFile)
@@ -42,6 +39,18 @@ parcheggio_prenotato = ("QLineEdit {\n"
                         "    background: #ffcd12;\n"
                         "}")
 """
+
+def readJSON():
+
+    global proxy_ip
+    global proxy_port
+    with open('config.json') as config_file:
+        data = json.load(config_file)
+
+        proxy_ip = data['proxy_ip']
+        proxy_port = data['proxy_port']
+
+        config_file.close()
 
 
 class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -90,10 +99,8 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
         orario = []
         numeroPosti = []
         new_numeroPosti = []
-        print(appo)
         for i in range(len(appo_split_n)):
             appo_split_analisi = appo_split_n[i].split(":")
-            print(appo_split_n[i])
             if len(appo_split_analisi) > 1:
                 orario.append(int(appo_split_analisi[0]))
                 numeroPosti.append(appo_split_analisi[1])
@@ -250,6 +257,7 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
 
 def show_parking(window):
     while True:
+
         url = "http://" + proxy_ip + ":" + str(proxy_port) + "/all?hash=" + str(window.rnum)
         r = requests.get(url)
         # print(r.text)
@@ -261,6 +269,8 @@ def show_parking(window):
 
 
 if __name__ == "__main__":
+
+    readJSON()
 
     seedValue = random.randrange(sys.maxsize)
     random.seed(seedValue)
