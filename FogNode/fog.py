@@ -119,7 +119,6 @@ def listeningThread():
 # Thread which periodically sends the sensors values to the ec2 server and updates the local stats dictionary
 def statsThread():
     while True:
-        time.sleep(60*60)  # Update every hour
 
         r = requests.post("http://" + server_ip + ":" + str(server_port) + "/fog_info", data=json.dumps(auto))
         print(r, file=sys.stderr)
@@ -130,8 +129,10 @@ def statsThread():
         print(r, file=sys.stderr)
         data = json.loads(r.text)
 
-        for key, value in data:
+        for key, value in data.items():
             stats.update({key: value})
+
+        time.sleep(60*60)  # Update every hour
 
 
 if __name__ == '__main__':

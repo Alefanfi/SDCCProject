@@ -53,7 +53,6 @@ def create_stats():
     dao = Dao(host, user, passwd, db, "sensors")
 
     while True:
-        time.sleep(60*60)  # Update every hour
 
         if not bool(fog):
             pass
@@ -72,6 +71,8 @@ def create_stats():
             grafici.createPlot24h(ax, ay)
             grafici.createPlot24h(ax, ay)
             grafici.mergePdfs()
+
+        time.sleep(60*60)  # Update every hour
 
 
 if __name__ == "__main__":

@@ -15,7 +15,7 @@ def readJSON():
 
     global proxy_ip
     global proxy_port
-    with open('Sensors/config.json') as config_file:
+    with open('config.json') as config_file:
         data = json.load(config_file)
 
         proxy_ip = data['proxy_ip']
@@ -44,8 +44,6 @@ class Sensor(Thread):
             else:
                 self.vacant = 0
 
-            print("Sensor" + str(self.num) + " - " + str(self.vacant))
-
             r = requests.post("http://" + self.server_ip + ":" + str(self.port) + "/update?hash="+str(self.num),
                               data={'num': self.num, 'val': self.vacant})
 
@@ -57,6 +55,7 @@ class Sensor(Thread):
 
 if __name__ == "__main__":
 
+    # Loading configuration
     readJSON()
 
     # Creating sensors

@@ -9,8 +9,8 @@ from PyQt5.QtCore import Qt, QTimer, QCoreApplication, QIODevice, QStringListMod
 from flask import request
 import matplotlib.pyplot as plt
 
-proxy_ip = ""    # Proxy server ip
-proxy_port = 0           # Proxy server port
+proxy_ip = ""               # Proxy server ip
+proxy_port = 0              # Proxy server port
 
 qtCreatorFile = "gui/parcheggio_gui.ui"  # Gui file
 Ui_MainWindow, QtBaseClass = uic.loadUiType(qtCreatorFile)
@@ -31,6 +31,7 @@ taken = ("QLineEdit {\n"
 
 
 def readJSON():
+
     global proxy_ip
     global proxy_port
     with open('config.json') as config_file:
@@ -232,6 +233,7 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
         plt.figure(figsize=(15, 8))
         plt.plot(new_hour, new_numAuto)
         plt.xticks(new_hour)
+        plt.title('Statistics on the last 24 h')
 
         plt.show()
 
@@ -252,6 +254,9 @@ def showParking(window):
 
 if __name__ == "__main__":
 
+    readJSON()
+
+    # Loading configuration
     readJSON()
 
     # Generating random value for nginx server session persistence
