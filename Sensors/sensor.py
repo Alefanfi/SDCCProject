@@ -1,3 +1,4 @@
+import json
 import random
 import sys
 import time
@@ -6,8 +7,21 @@ import requests
 from threading import Thread
 
 
-proxy_ip = "findfognode"
-proxy_port = 5000
+proxy_ip = ""
+proxy_port = 0
+
+
+def readJSON():
+
+    global proxy_ip
+    global proxy_port
+    with open('Sensors/config.json') as config_file:
+        data = json.load(config_file)
+
+        proxy_ip = data['proxy_ip']
+        proxy_port = data['proxy_port']
+
+        config_file.close()
 
 
 class Sensor(Thread):
@@ -30,6 +44,8 @@ class Sensor(Thread):
             else:
                 self.vacant = 0
 
+            print("Sensor" + str(self.num) + " - " + str(self.vacant))
+
             r = requests.post("http://" + self.server_ip + ":" + str(self.port) + "/update?hash="+str(self.num),
                               data={'num': self.num, 'val': self.vacant})
 
@@ -40,6 +56,8 @@ class Sensor(Thread):
 
 
 if __name__ == "__main__":
+
+    readJSON()
 
     # Creating sensors
     for i in range(1, 33):

@@ -209,7 +209,7 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
         appo = appo.replace("'", "")
         appo = appo.replace(",", "")
         appo = appo.replace(" ", "")
-        appo_split_n = appo.split("\\n")
+        appo_split_n = appo.split("\n")
         hour = []
         numAuto = []
         new_numAuto = []
@@ -251,6 +251,8 @@ def showParking(window):
 
 
 if __name__ == "__main__":
+
+    readJSON()
 
     # Generating random value for nginx server session persistence
     seedValue = random.randrange(sys.maxsize)

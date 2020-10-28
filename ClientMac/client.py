@@ -40,6 +40,7 @@ parcheggio_prenotato = ("QLineEdit {\n"
                         "}")
 """
 
+
 def readJSON():
 
     global proxy_ip
@@ -89,13 +90,14 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
         url = "http://" + proxy_ip + ":" + str(proxy_port) + "/stats?hash=" + str(self.rnum)
         r = requests.get(url)
         testoAnalisi = r.text
+        print(r.text)
         appo = testoAnalisi.replace("}", "")
         appo = appo.replace("{", "")
         appo = appo.replace('"', "")
         appo = appo.replace("'", "")
         appo = appo.replace(",", "")
         appo = appo.replace(" ", "")
-        appo_split_n = appo.split("\\n")
+        appo_split_n = appo.split("\n")
         orario = []
         numeroPosti = []
         new_numeroPosti = []
@@ -115,9 +117,12 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
             else:
                 ora = "{0}:00".format(str(indice_cercare))
             new_orario.append(ora)
+        print(new_numeroPosti)
+        print(new_orario)
+
         plt.figure(figsize=(15, 8))
-        plt.plot(orario, numeroPosti)
-        plt.xticks(orario)
+        plt.plot(new_orario, new_numeroPosti)
+        plt.xticks(new_orario)
 
         plt.show()
 

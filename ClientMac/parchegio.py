@@ -7,18 +7,18 @@ from PyQt5.QtCore import Qt
 qtCreatorFile = "gui/parcheggio_gui.ui"  # Enter file
 Ui_MainWindow, QtBaseClass = uic.loadUiType(qtCreatorFile)
 
-parcheggio_vuoto = ("QLineEdit {\n"
-                    "    border: 2px solid gray;\n"
-                    "    border-radius: 10px;\n"
-                    "    padding: 0 8px;\n"
-                    "    background-color: #33ff66;\n"
+parcheggio_vuoto = ("QLineEdit {"
+                    "    border: 2px solid gray;"
+                    "    border-radius: 10px;"
+                    "    padding: 0 8px;"
+                    "    background-color: #33ff66;"
                     "}")
 
-parcheggio_occupato = ("QLineEdit {\n"
-                       "    border: 2px solid red;\n"
-                       "    border-radius: 10px;\n"
-                       "    padding: 0 8px;\n"
-                       "    background: #cf4245;\n"
+parcheggio_occupato = ("QLineEdit {"
+                       "    border: 2px solid red;"
+                       "    border-radius: 10px;"
+                       "    padding: 0 8px;"
+                       "    background: #cf4245;"
                        "}")
 
 parcheggio_prenotato = ("QLineEdit {\n"
