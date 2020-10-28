@@ -88,44 +88,48 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
     def getStats(self, e):
 
         url = "http://" + proxy_ip + ":" + str(proxy_port) + "/stats?hash=" + str(self.rnum)
-        r = requests.get(url)
-        testoAnalisi = r.text
-        print(r.text)
-        appo = testoAnalisi.replace("}", "")
-        appo = appo.replace("{", "")
-        appo = appo.replace('"', "")
-        appo = appo.replace("'", "")
-        appo = appo.replace(",", "")
-        appo = appo.replace(" ", "")
-        appo_split_n = appo.split("\n")
-        orario = []
-        numeroPosti = []
-        new_numeroPosti = []
-        for i in range(len(appo_split_n)):
-            appo_split_analisi = appo_split_n[i].split(":")
-            if len(appo_split_analisi) > 1:
-                orario.append(int(appo_split_analisi[0]))
-                numeroPosti.append(appo_split_analisi[1])
-        orario_sorted = sorted(orario)
-        new_orario = []
-        for k in range(len(orario_sorted)):
-            indice_cercare = orario_sorted[k]
-            indice = orario.index(indice_cercare)
-            new_numeroPosti.append(numeroPosti[indice])
-            if len(str(indice_cercare)) == 1:
-                ora = "{0}{1}:00".format("0", str(indice_cercare))
-            else:
-                ora = "{0}:00".format(str(indice_cercare))
-            new_orario.append(ora)
-        print(new_numeroPosti)
-        print(new_orario)
 
-        plt.figure(figsize=(15, 8))
-        plt.plot(new_orario, new_numeroPosti)
-        plt.xticks(new_orario)
+        try:
+            r = requests.get(url)
+            testoAnalisi = r.text
+            print(r.text)
+            appo = testoAnalisi.replace("}", "")
+            appo = appo.replace("{", "")
+            appo = appo.replace('"', "")
+            appo = appo.replace("'", "")
+            appo = appo.replace(",", "")
+            appo = appo.replace(" ", "")
+            appo_split_n = appo.split("\n")
+            orario = []
+            numeroPosti = []
+            new_numeroPosti = []
+            for i in range(len(appo_split_n)):
+                appo_split_analisi = appo_split_n[i].split(":")
+                if len(appo_split_analisi) > 1:
+                    orario.append(int(appo_split_analisi[0]))
+                    numeroPosti.append(appo_split_analisi[1])
+            orario_sorted = sorted(orario)
+            new_orario = []
+            for k in range(len(orario_sorted)):
+                indice_cercare = orario_sorted[k]
+                indice = orario.index(indice_cercare)
+                new_numeroPosti.append(numeroPosti[indice])
+                if len(str(indice_cercare)) == 1:
+                    ora = "{0}{1}:00".format("0", str(indice_cercare))
+                else:
+                    ora = "{0}:00".format(str(indice_cercare))
+                new_orario.append(ora)
+            print(new_numeroPosti)
+            print(new_orario)
 
-        plt.show()
+            plt.figure(figsize=(15, 8))
+            plt.plot(new_orario, new_numeroPosti)
+            plt.xticks(new_orario)
 
+            plt.show()
+
+        except requests.ConnectionError as e:
+            print(e.args, file=sys.stderr)  # Displays the error
 
     def setOccupied(self, sensors):
 
@@ -262,15 +266,17 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
 
 def show_parking(window):
     while True:
-
         url = "http://" + proxy_ip + ":" + str(proxy_port) + "/all?hash=" + str(window.rnum)
-        r = requests.get(url)
-        # print(r.text)
+        try:
+            r = requests.get(url)
 
-        data = json.loads(r.text)
-        window.setOccupied(data)
+            data = json.loads(r.text)
+            window.setOccupied(data)
 
-        time.sleep(5)
+        except requests.ConnectionError as e:
+            print(e.args, file=sys.stderr)  # Displays the error
+
+        time.sleep(10)
 
 
 if __name__ == "__main__":

@@ -23,8 +23,10 @@ All information on the options can be found in the [docker-compose up](https://d
 #### Sensors
 To simulate the sensors you can use the code provided in sensor.py.
  
-Just run the following command:
+Just run the following commands:
 
+    cd Sensors
+    
     python sensor.py
     
 ## Client

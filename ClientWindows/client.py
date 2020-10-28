@@ -201,41 +201,47 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
     def getStats(self, e):
 
         url = "http://" + proxy_ip + ":" + str(proxy_port) + "/stats?hash=" + str(self.rnum)
-        r = requests.get(url)
-        text = r.text
 
-        appo = text.replace("}", "")
-        appo = appo.replace("{", "")
-        appo = appo.replace('"', "")
-        appo = appo.replace("'", "")
-        appo = appo.replace(",", "")
-        appo = appo.replace(" ", "")
-        appo_split_n = appo.split("\n")
-        hour = []
-        numAuto = []
-        new_numAuto = []
-        for i in range(len(appo_split_n)):
-            appo_split_analisi = appo_split_n[i].split(":")
-            if len(appo_split_analisi) > 1:
-                hour.append(int(appo_split_analisi[0]))
-                numAuto.append(appo_split_analisi[1])
-        hour_sorted = sorted(hour)
-        new_hour = []
-        for k in range(len(hour_sorted)):
-            index_search = hour_sorted[k]
-            index = hour.index(index_search)
-            new_numAuto.append(numAuto[index])
-            if len(str(index_search)) == 1:
-                ora = "{0}{1}:00".format("0", str(index_search))
-            else:
-                ora = "{0}:00".format(str(index_search))
-            new_hour.append(ora)
-        plt.figure(figsize=(15, 8))
-        plt.plot(new_hour, new_numAuto)
-        plt.xticks(new_hour)
-        plt.title('Statistics on the last 24 h')
+        try:
+            r = requests.get(url)
 
-        plt.show()
+            text = r.text
+
+            appo = text.replace("}", "")
+            appo = appo.replace("{", "")
+            appo = appo.replace('"', "")
+            appo = appo.replace("'", "")
+            appo = appo.replace(",", "")
+            appo = appo.replace(" ", "")
+            appo_split_n = appo.split("\n")
+            hour = []
+            numAuto = []
+            new_numAuto = []
+            for i in range(len(appo_split_n)):
+                appo_split_analisi = appo_split_n[i].split(":")
+                if len(appo_split_analisi) > 1:
+                    hour.append(int(appo_split_analisi[0]))
+                    numAuto.append(appo_split_analisi[1])
+            hour_sorted = sorted(hour)
+            new_hour = []
+            for k in range(len(hour_sorted)):
+                index_search = hour_sorted[k]
+                index = hour.index(index_search)
+                new_numAuto.append(numAuto[index])
+                if len(str(index_search)) == 1:
+                    ora = "{0}{1}:00".format("0", str(index_search))
+                else:
+                    ora = "{0}:00".format(str(index_search))
+                new_hour.append(ora)
+            plt.figure(figsize=(15, 8))
+            plt.plot(new_hour, new_numAuto)
+            plt.xticks(new_hour)
+            plt.title('Statistics on the last 24 h')
+
+            plt.show()
+
+        except requests.ConnectionError as e:
+            print(e.args, file=sys.stderr)  # Displays the error
 
 
 # Contacts the fog node to update the parking spots
@@ -243,11 +249,14 @@ def showParking(window):
 
     while True:
         url = "http://" + proxy_ip + ":" + str(proxy_port) + "/all?hash=" + str(window.rnum)
-        r = requests.get(url)
-        print(r.text)
+        try:
+            r = requests.get(url)
 
-        data = json.loads(r.text)
-        window.setOccupied(data)
+            data = json.loads(r.text)
+            window.setOccupied(data)
+
+        except requests.ConnectionError as e:
+            print(e.args, file=sys.stderr)  # Displays the error
 
         time.sleep(10)
 

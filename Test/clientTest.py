@@ -23,7 +23,10 @@ def createTestFile(file_name, test_url, num):
     for i in range(0, num):
 
         start = time.time()
-        r = requests.get(test_url)
+        try:
+            r = requests.get(test_url)
+        except requests.ConnectionError as e:
+            print(e.args, file=sys.stderr)  # Displays the error
         end = time.time()
 
         row.update({'id': i, 'time': end - start})
@@ -55,10 +58,9 @@ def stopFog():
 
 # Kills random fog node to test fault tolerance
 def killFogNode():
-
     while True:
 
-        time.sleep(2*60)
+        time.sleep(2 * 60)
 
         result = subprocess.Popen(['sh', 'getContainers.sh'],
                                   stdout=subprocess.PIPE,
@@ -74,6 +76,22 @@ def killFogNode():
                              stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT,
                              universal_newlines=True).communicate()
+
+
+# Creates a new client
+def createClient(ip, port):
+
+    hash_num = random.randint(2000, 3000)
+    url = "http://" + ip + ":" + str(port) + "/" + "all?hash=" + str(hash_num)
+
+    while True:
+
+        time.sleep(10)
+        
+        try:
+            r = requests.get(url)
+        except requests.ConnectionError as e:
+            print(e.args, file=sys.stderr)  # Displays the error
 
 
 # Launches the tests for a specific function func
@@ -102,8 +120,61 @@ def runTest(num_fog, ip, port, num, func, failure):
     stopFog()  # Stops the fog nodes
 
 
-if __name__ == "__main__":
+# Test with increasing number of fog nodes
+def incFogNodesTest(ip, port, repetitions):
+    print("---------- Test client without failures - incFogNodesTest ----------\n\n")
 
+    for i in range(1, 10):
+        runTest(i, ip, port, repetitions, "all", 0)
+        runTest(i, ip, port, repetitions, "stats", 0)
+
+    print("\n---------- Test client with failures - incFogNodesTest ----------\n\n")
+
+    t = threading.Thread(target=killFogNode)
+    t.daemon = True
+    t.start()
+
+    for i in range(3, 10):
+        runTest(i, ip, port, repetitions, "all", 1)
+        runTest(i, ip, port, repetitions, "stats", 1)
+
+    print("\nEND")
+
+
+# Test with increasing number of clients
+def incClientsTest(ip, port, repetitions, failure):
+    if failure:
+
+        print("\n---------- Test client with failures - incClientsTest ----------\n\n")
+
+        t = threading.Thread(target=killFogNode)
+        t.daemon = True
+        t.start()
+
+        for i in range(1, 5):
+            tc = threading.Thread(target=createClient, args=(ip, port,))
+            tc.daemon = True
+            tc.start()
+
+            runTest(5, ip, port, repetitions, "all", "all_client_" + str(i) + "_fail.csv")
+            runTest(5, ip, port, repetitions, "stats", "stats_client_" + str(i) + "_fail.csv")
+
+    else:
+
+        print("---------- Test client without failures - incClientsTest ----------\n\n")
+
+        for i in range(1, 5):
+            tc = threading.Thread(target=createClient, args=(ip, port,))
+            tc.daemon = True
+            tc.start()
+
+            runTest(5, ip, port, repetitions, "all", "all_client_" + str(i) + "_nofail.csv")
+            runTest(5, ip, port, repetitions, "stats", "stats_client_" + str(i) + "_nofail.csv")
+
+    print("\nEND")
+
+
+if __name__ == "__main__":
     # Loading configuration from config.json
     config_file = open("config.json", "r")
     json_object = json.load(config_file)
@@ -113,20 +184,8 @@ if __name__ == "__main__":
     proxy_port = json_object['proxy_port']
     repetitions = json_object['repetitions']
 
-    print("---------- Test client without failures ----------\n\n")
+    # incFogNodesTest(proxy_ip, proxy_port, repetitions)
 
-    for i in range(1, 10):
-        runTest(i, proxy_ip, proxy_port, repetitions, "all", 0)
-        runTest(i, proxy_ip, proxy_port, repetitions, "stats", 0)
+    incClientsTest(proxy_ip, proxy_port, repetitions, 0)
 
-    print("\n---------- Test client with failures ----------\n\n")
-
-    t = threading.Thread(target=killFogNode)
-    t.daemon = True
-    t.start()
-
-    for i in range(3, 10):
-        runTest(i, proxy_ip, proxy_port, repetitions, "all", 1)
-        runTest(i, proxy_ip, proxy_port, repetitions, "stats", 1)
-
-    print("\nEND")
+    # incClientsTest(proxy_ip, proxy_port, repetitions, 1)
