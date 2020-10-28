@@ -58,7 +58,7 @@ def killFogNode():
 
     while True:
 
-        time.sleep(60)
+        time.sleep(2*60)
 
         result = subprocess.Popen(['sh', 'getContainers.sh'],
                                   stdout=subprocess.PIPE,
