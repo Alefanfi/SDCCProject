@@ -1,12 +1,14 @@
 import csv
+import json
 import subprocess
+import sys
 import threading
 import time
 import requests
+import random
 
-proxy_ip = "findfognode"
-proxy_port = 5000
-hash_num = 1234
+seedValue = random.randrange(sys.maxsize)
+random.seed(seedValue)
 
 
 # Creates a new csv file with the results of the test, num specifies the number of repetitions
@@ -51,9 +53,31 @@ def stopFog():
                      universal_newlines=True).communicate()
 
 
-# Launches the tests for a specific function func
-def runTest(num_fog, num, func):
+# Kills random fog node to test fault tolerance
+def killFogNode():
 
+    while True:
+
+        time.sleep(60)
+
+        result = subprocess.Popen(['sh', 'getContainers.sh'],
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.STDOUT,
+                                  universal_newlines=True).communicate()
+
+        names = result[0].split("\n")
+
+        if len(names) > 3:
+            num = random.randint(1, len(names) - 1)
+
+            subprocess.Popen(['sh', 'killContainer.sh', names[num]],
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT,
+                             universal_newlines=True).communicate()
+
+
+# Launches the tests for a specific function func
+def runTest(num_fog, ip, port, num, func, failure):
     print("Testing function " + func + " on " + str(num_fog) + " fog nodes\n")
 
     # Creating the fog nodes and the proxy server
@@ -63,22 +87,46 @@ def runTest(num_fog, num, func):
 
     time.sleep(5)  # Sleep for a few seconds to give to docker-compose
 
-    url = "http://" + proxy_ip + ":" + str(proxy_port) + "/" + func + "?hash=" + str(hash_num)
-    name = func + "_fog_" + str(num_fog) + ".csv"
+    hash_num = random.randint(2000, 3000)
+
+    url = "http://" + ip + ":" + str(port) + "/" + func + "?hash=" + str(hash_num)
+
+    # Changes the file name based on the type of test
+    if failure:
+        name = func + "_fog_" + str(num_fog) + "_fail" + ".csv"
+    else:
+        name = func + "_fog_" + str(num_fog) + "_no_fail" + ".csv"
 
     createTestFile(name, url, num)
 
-    stopFog()   # Stops the fog nodes
+    stopFog()  # Stops the fog nodes
 
 
 if __name__ == "__main__":
-    repetitions = 100
 
-    print("---------- Test client ----------\n\n")
+    # Loading configuration from config.json
+    config_file = open("config.json", "r")
+    json_object = json.load(config_file)
+    config_file.close()
 
-    for i in range(1, 6):
-        runTest(i, repetitions, "all")
-        runTest(i, repetitions, "stats")
+    proxy_ip = json_object['proxy_ip']
+    proxy_port = json_object['proxy_port']
+    repetitions = json_object['repetitions']
 
-    print("END")
+    print("---------- Test client without failures ----------\n\n")
 
+    for i in range(1, 10):
+        runTest(i, proxy_ip, proxy_port, repetitions, "all", 0)
+        runTest(i, proxy_ip, proxy_port, repetitions, "stats", 0)
+
+    print("\n---------- Test client with failures ----------\n\n")
+
+    t = threading.Thread(target=killFogNode)
+    t.daemon = True
+    t.start()
+
+    for i in range(3, 10):
+        runTest(i, proxy_ip, proxy_port, repetitions, "all", 1)
+        runTest(i, proxy_ip, proxy_port, repetitions, "stats", 1)
+
+    print("\nEND")

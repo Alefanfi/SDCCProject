@@ -1,0 +1,5 @@
+{
+  "proxy_ip": "findfognode",
+  "proxy_port": 5000,
+  "repetitions": 100
+}
