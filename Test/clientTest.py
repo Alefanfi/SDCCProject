@@ -95,8 +95,7 @@ def createClient(ip, port):
 
 
 # Launches the tests for a specific function func
-def runTest(num_fog, ip, port, num, func, failure):
-    print("Testing function " + func + " on " + str(num_fog) + " fog nodes\n")
+def runTest(num_fog, ip, port, num, func, name):
 
     # Creating the fog nodes and the proxy server
     t = threading.Thread(target=startFog, args=(num_fog,))
@@ -109,12 +108,6 @@ def runTest(num_fog, ip, port, num, func, failure):
 
     url = "http://" + ip + ":" + str(port) + "/" + func + "?hash=" + str(hash_num)
 
-    # Changes the file name based on the type of test
-    if failure:
-        name = func + "_fog_" + str(num_fog) + "_fail" + ".csv"
-    else:
-        name = func + "_fog_" + str(num_fog) + "_no_fail" + ".csv"
-
     createTestFile(name, url, num)
 
     stopFog()  # Stops the fog nodes
@@ -125,8 +118,10 @@ def incFogNodesTest(ip, port, repetitions):
     print("---------- Test client without failures - incFogNodesTest ----------\n\n")
 
     for i in range(1, 10):
-        runTest(i, ip, port, repetitions, "all", 0)
-        runTest(i, ip, port, repetitions, "stats", 0)
+        print("Testing function all on " + str(i) + " fog nodes\n")
+        runTest(i, ip, port, repetitions, "all", "all_fog_" + str(i) + "_nofail.csv")
+        print("Testing function stats on " + str(i) + " fog nodes\n")
+        runTest(i, ip, port, repetitions, "stats", "stats_fog_" + str(i) + "_nofail.csv")
 
     print("\n---------- Test client with failures - incFogNodesTest ----------\n\n")
 
@@ -135,8 +130,10 @@ def incFogNodesTest(ip, port, repetitions):
     t.start()
 
     for i in range(3, 10):
-        runTest(i, ip, port, repetitions, "all", 1)
-        runTest(i, ip, port, repetitions, "stats", 1)
+        print("Testing function all on " + str(i) + " fog nodes\n")
+        runTest(i, ip, port, repetitions, "all", "all_fog_" + str(i) + "_fail.csv")
+        print("Testing function stats on " + str(i) + " fog nodes\n")
+        runTest(i, ip, port, repetitions, "stats", "stats_fog_" + str(i) + "_fail.csv")
 
     print("\nEND")
 
@@ -156,7 +153,9 @@ def incClientsTest(ip, port, repetitions, failure):
             tc.daemon = True
             tc.start()
 
+            print("Testing function all with " + str(i) + " clients\n")
             runTest(5, ip, port, repetitions, "all", "all_client_" + str(i) + "_fail.csv")
+            print("Testing function stats with " + str(i) + " clients\n")
             runTest(5, ip, port, repetitions, "stats", "stats_client_" + str(i) + "_fail.csv")
 
     else:
@@ -168,7 +167,9 @@ def incClientsTest(ip, port, repetitions, failure):
             tc.daemon = True
             tc.start()
 
+            print("Testing function all with " + str(i) + " clients\n")
             runTest(5, ip, port, repetitions, "all", "all_client_" + str(i) + "_nofail.csv")
+            print("Testing function stats with " + str(i) + " clients\n")
             runTest(5, ip, port, repetitions, "stats", "stats_client_" + str(i) + "_nofail.csv")
 
     print("\nEND")
@@ -186,6 +187,6 @@ if __name__ == "__main__":
 
     # incFogNodesTest(proxy_ip, proxy_port, repetitions)
 
-    incClientsTest(proxy_ip, proxy_port, repetitions, 0)
+    #incClientsTest(proxy_ip, proxy_port, repetitions, 0)
 
-    # incClientsTest(proxy_ip, proxy_port, repetitions, 1)
+    incClientsTest(proxy_ip, proxy_port, repetitions, 1)
