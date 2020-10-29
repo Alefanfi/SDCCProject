@@ -1,4 +1,5 @@
 import json
+import os
 import threading
 import time
 
@@ -59,18 +60,24 @@ def create_stats():
         else:
             print(fog)
             dao.insertValue(fog)  # Inserts values into the database
-            stats.update(dao.getLast24h())  # Updates the statistics
+        stats.update(dao.getLast24h())  # Updates the statistics
+        pathh = os.path.join('CentralNode/fileS3', 'statistiche.pdf')
+        if os.path.isfile(pathh):
+            os.remove(pathh)
 
-            """Costruisce gli array di valori che verranno ad essere utilizzati per la realizzazione dei grafici e 
-            delle statistiche """
-            ax = []
-            ay = []
-            for x in stats:
-                ax.append(x)
-                ay.append((stats[x]))
-            grafici.createPlot24h(ax, ay)
-            grafici.createPlot24h(ax, ay)
-            grafici.mergePdfs()
+        path = os.path.join('CentralNode/fileS3', 'grafico.pdf')
+        if os.path.isfile(path):
+            os.remove(path)
+        """Costruisce gli array di valori che verranno ad essere utilizzati per la realizzazione dei grafici e 
+        delle statistiche """
+        ax = []
+        ay = []
+        for x in stats:
+            ax.append(x)
+            ay.append((stats[x]))
+        grafici.createPlot24h(ax, ay)
+        grafici.createPlot24h(ax, ay)
+        grafici.mergePdfs()
 
         time.sleep(60*60)  # Update every hour
 

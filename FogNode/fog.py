@@ -130,7 +130,7 @@ def statsThread():
         except requests.ConnectionError as e:
             print(e.args, file=sys.stderr)  # Displays the error
 
-        time.sleep(60 * 60)  # Update every hour
+        time.sleep(60*60)  # Update every hour
 
 
 if __name__ == '__main__':
