@@ -13,6 +13,7 @@ FOLDER_NAME = ""
 BUCKET_NAME = ""
 
 
+# Loads configurations from config.json file
 def readJSON():
     global FOLDER_NAME, BUCKET_NAME
     with open('config.json') as config_file:
@@ -24,7 +25,10 @@ def readJSON():
         config_file.close()
 
 
+# Create a plot using the statistics taken from the ec2 server and save it on a pdf file
 def createPlot24h(times, ay):
+
+    # Reorganize the values taken from ec2
     new_times = []
     new_ay = []
     times_sorted = sorted(times)
@@ -46,7 +50,9 @@ def createPlot24h(times, ay):
     # plt.show()
 
 
+# Write a pdf file with the values used for the plot
 def writePdf(times, posti):
+    # Reorganize the values taken from ec2
     filename = 'statistiche.pdf'
     new_times = []
     new_posti = []
@@ -77,6 +83,7 @@ def writePdf(times, posti):
     shutil.move(filename, FOLDER_NAME)
 
 
+# Merge pdf files
 def mergePdfs():
     readJSON()
     files = ['files3/grafico.pdf', 'files3/statistiche.pdf']
@@ -96,17 +103,17 @@ def mergePdfs():
         pdf_writer.write(out)
         out.close()
 
-    # Controllo se il bucket esiste
+    # Check if the bucket exist
     res = s3api.bucket_exists(BUCKET_NAME)
-    # Se il bucket non esiste lo creo
+    # if the bucket doesn't exist, create it
     if not res:
         s3api.create_bucket(BUCKET_NAME)
 
-    # carico il file nel bucket
+    # upload file on S3
     s3api.upload_file(output, BUCKET_NAME)
     # shutil.move(output, FOLDER_NAME)
     os.remove(output)
 
-    # rimuovo i file che avevo creato
+    # delete file from local folder
     for k in files:
         os.remove(k)

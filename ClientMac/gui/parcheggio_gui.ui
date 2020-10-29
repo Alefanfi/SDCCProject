@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Parking</class>
+ <class>ParkingNow</class>
  <widget class="QMainWindow" name="ParkingNow">
   <property name="geometry">
    <rect>
@@ -42,12 +42,14 @@
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">QLineEdit {
+     <string notr="true">QLineEdit{
     border: 2px solid gray;
     border-radius: 10px;
     padding: 0 8px;
     background-color: #33ff66;
-}</string>
+}
+
+</string>
     </property>
     <property name="text">
      <string/>
